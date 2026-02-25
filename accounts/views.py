@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import AuthenticationForm
+from django.contrib import messages
 
 def login_view(request):
     if request.method == 'POST':
@@ -8,7 +9,9 @@ def login_view(request):
         if form.is_valid():
             user = form.get_user()
             login(request, user)
-            return redirect('dashboard')  # we'll create this later
+            messages.success(request, f'Welcome, {user.username}! Login successful.')
+        else:
+            messages.error(request, 'Invalid username or password. Please try again.')
     else:
         form = AuthenticationForm()
     return render(request, 'accounts/login.html', {'form': form})

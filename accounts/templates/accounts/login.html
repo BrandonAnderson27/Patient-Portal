@@ -2,9 +2,20 @@
 <html>
 <head>
     <title>Patient Portal - Login</title>
+    <style>
+        .error { color: red; }
+        .success { color: green; }
+    </style>
 </head>
 <body>
     <h2>Patient Portal Login</h2>
+
+    {% if messages %}
+        {% for message in messages %}
+            <p class="{{ message.tags }}">{{ message }}</p>
+        {% endfor %}
+    {% endif %}
+
     <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
