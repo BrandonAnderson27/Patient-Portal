@@ -31,8 +31,19 @@ class Patient(models.Model):
 
 class Provider(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    # provider only fields
+    appointment_schedule = models.TextField(blank=True)
+    patient_list = models.TextField(blank=True)
+    specialization = models.CharField(max_length=255, blank=True)
+    license_number = models.CharField(max_length=255, blank=True)
 
 class Receptionist(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    # receptionist only fields
+    provider = models.CharField(max_length=255, blank=True)
+    
+class LabStaff(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    lab = models.CharField(max_length=255, blank=True)
+
+class Admin(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    admin_level = models.CharField(max_length=255, blank=True)
