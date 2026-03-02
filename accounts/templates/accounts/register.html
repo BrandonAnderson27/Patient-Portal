@@ -36,13 +36,15 @@
             cursor: pointer;
         }
         button:hover { background-color: #27ae60; }
+        .error { color: red; }
+        .success { color: green; }
     </style>
 </head>
 <body>
     <h1>Create Patient Account</h1>
     {% if messages %}
         {% for message in messages %}
-            <p style="color:red;">{{ message }}</p>
+            <p class="{{ message.tags }}">{{ message }}</p>
         {% endfor %}
     {% endif %}
     <form method="POST">
@@ -56,5 +58,6 @@
         <input type="date" name="date_of_birth" placeholder="Date of Birth">
         <button type="submit">Register</button>
     </form>
+    <p>Already have an account? <a href="{% url 'login' %}">Login here</a></p>
 </body>
 </html>

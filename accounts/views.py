@@ -2,13 +2,21 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib import messages
-from accounts.models import User, Patient
+from accounts.models import User, Patient, AccountApprovalRequest
 
 def login_view(request):
     if request.method == 'POST':
         form = AuthenticationForm(data=request.POST)
         if form.is_valid():
             user = form.get_user()
+            # check if patient needs approval
+            try:
+                patient = Patient.objects.get(user=user)
+                if not patient.is_approved:
+                    messages.error(request, 'Your account is pending admin approval.')
+                    return render(request, 'accounts/login.html', {'form': form})
+            except Patient.DoesNotExist:
+                pass  # admins/providers won't have a patient profile
             login(request, user)
             messages.success(request, f'Welcome, {user.username}! Login successful.')
         else:
@@ -41,8 +49,9 @@ def register_view(request):
             date_of_birth=date_of_birth,
             role='patient'
         )
-        Patient.objects.create(user=user)
-        messages.success(request, 'Account created successfully! Please login.')
+        patient = Patient.objects.create(user=user, is_approved=False)
+        AccountApprovalRequest.objects.create(patient=patient)
+        messages.success(request, 'Registration submitted! Please wait for admin approval before logging in.')
         return redirect('login')
     
     return render(request, 'accounts/register.html')

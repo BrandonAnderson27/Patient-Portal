@@ -17,7 +17,6 @@ class User(AbstractUser):
     ]
 
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, blank=True, null=True)
-    # shared fields for every user
     phone_number = models.CharField(max_length=15, blank=True)
     date_of_birth = models.DateField(null=True, blank=True)
 
@@ -28,6 +27,22 @@ class Patient(models.Model):
     medical_record = models.CharField(max_length=255, blank=True)
     appointment_history = models.TextField(blank=True)
     upcoming_appointments = models.TextField(blank=True)
+    is_approved = models.BooleanField(default=False)  # new
+
+class AccountApprovalRequest(models.Model):  # new
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    ]
+    patient = models.OneToOneField(Patient, on_delete=models.CASCADE)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    requested_at = models.DateTimeField(auto_now_add=True)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    reviewed_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
+
+    def __str__(self):
+        return f"Request for {self.patient.user.username} - {self.status}"
 
 class Provider(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
