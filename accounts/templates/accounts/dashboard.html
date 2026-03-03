@@ -75,8 +75,54 @@
     <div class="cards">
         <div class="card">
             <div class="card-icon">📅</div>
-            <h2>Appointments</h2>
-            <p>No upcoming appointments.</p>
+            <h2>Upcoming Appointments</h2>
+            {% if upcoming_appointments %}
+                <table style="width:100%; border-collapse: collapse;">
+                    <tr style="text-align:left; color:#888; font-size:0.9rem;">
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Provider</th>
+                        <th>Reason</th>
+                        <th>Status</th>
+                    </tr>
+                    {% for appointment in upcoming_appointments %}
+                    <tr style="border-top: 1px solid #f0f4f8; padding: 5px 0;">
+                        <td>{{ appointment.date }}</td>
+                        <td>{{ appointment.time }}</td>
+                        <td>Dr. {{ appointment.provider.user.last_name }}</td>
+                        <td>{{ appointment.reason }}</td>
+                        <td>{{ appointment.status }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            {% else %}
+                <p>No upcoming appointments.</p>
+            {% endif %}
+
+            <br>
+            <h2>Appointment History</h2>
+            {% if appointment_history %}
+                <table style="width:100%; border-collapse: collapse;">
+                    <tr style="text-align:left; color:#888; font-size:0.9rem;">
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Provider</th>
+                        <th>Reason</th>
+                        <th>Status</th>
+                    </tr>
+                    {% for appointment in appointment_history %}
+                    <tr style="border-top: 1px solid #f0f4f8;">
+                        <td>{{ appointment.date }}</td>
+                        <td>{{ appointment.time }}</td>
+                        <td>Dr. {{ appointment.provider.user.last_name }}</td>
+                        <td>{{ appointment.reason }}</td>
+                        <td>{{ appointment.status }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            {% else %}
+                <p>No appointment history.</p>
+            {% endif %}
         </div>
 
         <div class="card">

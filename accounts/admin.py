@@ -1,6 +1,6 @@
 from django.contrib import admin
-from .models import Patient, AccountApprovalRequest
 from django.utils import timezone
+from .models import Patient, AccountApprovalRequest, Appointment
 
 class AccountApprovalAdmin(admin.ModelAdmin):
     list_display = ['patient', 'status', 'requested_at']
@@ -26,3 +26,4 @@ class AccountApprovalAdmin(admin.ModelAdmin):
 
 admin.site.register(Patient)
 admin.site.register(AccountApprovalRequest, AccountApprovalAdmin)
+admin.site.register(Appointment)

@@ -25,11 +25,20 @@ class Patient(models.Model):
     address = models.CharField(max_length=255, blank=True)
     insurance_provider = models.CharField(max_length=255, blank=True)
     medical_record = models.CharField(max_length=255, blank=True)
-    appointment_history = models.TextField(blank=True)
-    upcoming_appointments = models.TextField(blank=True)
-    is_approved = models.BooleanField(default=False)  # new
+    is_approved = models.BooleanField(default=False)
 
-class AccountApprovalRequest(models.Model):  # new
+    def get_upcoming_appointments(self):
+        from django.utils import timezone
+        return self.appointments.filter(date__gte=timezone.now().date(), status='scheduled').order_by('date', 'time')
+
+    def get_appointment_history(self):
+        from django.utils import timezone
+        return self.appointments.filter(date__lt=timezone.now().date()).order_by('-date', '-time')
+
+    def __str__(self):
+        return f"{self.user.first_name} {self.user.last_name}"
+
+class AccountApprovalRequest(models.Model):
     STATUS_CHOICES = [
         ('pending', 'Pending'),
         ('approved', 'Approved'),
@@ -46,15 +55,23 @@ class AccountApprovalRequest(models.Model):  # new
 
 class Provider(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    appointment_schedule = models.TextField(blank=True)
-    patient_list = models.TextField(blank=True)
     specialization = models.CharField(max_length=255, blank=True)
     license_number = models.CharField(max_length=255, blank=True)
 
+    def get_upcoming_appointments(self):
+        from django.utils import timezone
+        return self.appointments.filter(date__gte=timezone.now().date(), status='scheduled').order_by('date', 'time')
+
+    def get_patient_list(self):
+        return Patient.objects.filter(appointments__provider=self).distinct()
+
+    def __str__(self):
+        return f"Dr. {self.user.first_name} {self.user.last_name}"
+
 class Receptionist(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    provider = models.CharField(max_length=255, blank=True)
-    
+    provider = models.ForeignKey(Provider, null=True, blank=True, on_delete=models.SET_NULL, related_name='receptionists')
+
 class LabStaff(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     lab = models.CharField(max_length=255, blank=True)
@@ -62,3 +79,22 @@ class LabStaff(models.Model):
 class Admin(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     admin_level = models.CharField(max_length=255, blank=True)
+
+class Appointment(models.Model):
+    STATUS_CHOICES = [
+        ('scheduled', 'Scheduled'),
+        ('completed', 'Completed'),
+        ('cancelled', 'Cancelled'),
+        ('no_show', 'No Show'),
+    ]
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='appointments')
+    provider = models.ForeignKey(Provider, on_delete=models.CASCADE, related_name='appointments')
+    date = models.DateField()
+    time = models.TimeField()
+    reason = models.TextField(blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='scheduled')
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.patient.user.username} with Dr. {self.provider.user.last_name} on {self.date} at {self.time}"

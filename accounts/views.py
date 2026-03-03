@@ -60,4 +60,15 @@ def register_view(request):
 
 @login_required
 def dashboard_view(request):
-    return render(request, 'accounts/dashboard.html')
+    try:
+        patient = Patient.objects.get(user=request.user)
+        upcoming_appointments = patient.get_upcoming_appointments()
+        appointment_history = patient.get_appointment_history()
+    except Patient.DoesNotExist:
+        upcoming_appointments = []
+        appointment_history = []
+
+    return render(request, 'accounts/dashboard.html', {
+        'upcoming_appointments': upcoming_appointments,
+        'appointment_history': appointment_history,
+    })
