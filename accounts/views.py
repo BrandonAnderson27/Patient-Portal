@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from accounts.models import User, Patient, AccountApprovalRequest
 
@@ -19,6 +20,7 @@ def login_view(request):
                 pass  # admins/providers won't have a patient profile
             login(request, user)
             messages.success(request, f'Welcome, {user.username}! Login successful.')
+            return redirect('dashboard')
         else:
             messages.error(request, 'Invalid username or password. Please try again.')
     else:
@@ -55,3 +57,7 @@ def register_view(request):
         return redirect('login')
     
     return render(request, 'accounts/register.html')
+
+@login_required
+def dashboard_view(request):
+    return render(request, 'accounts/dashboard.html')
