@@ -3,23 +3,26 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from accounts.models import User, Patient, AccountApprovalRequest
+from django.http import JsonResponse
+from accounts.models import Appointment, User, Patient, AccountApprovalRequest, Provider, ProviderAvailability
+import datetime
 
 def login_view(request):
     if request.method == 'POST':
         form = AuthenticationForm(data=request.POST)
         if form.is_valid():
             user = form.get_user()
-            # check if patient needs approval
             try:
                 patient = Patient.objects.get(user=user)
                 if not patient.is_approved:
                     messages.error(request, 'Your account is pending admin approval.')
                     return render(request, 'accounts/login.html', {'form': form})
             except Patient.DoesNotExist:
-                pass  # admins/providers won't have a patient profile
+                pass
             login(request, user)
             messages.success(request, f'Welcome, {user.username}! Login successful.')
+            if user.role == 'provider':
+                return redirect('provider_dashboard')
             return redirect('dashboard')
         else:
             messages.error(request, 'Invalid username or password. Please try again.')
@@ -80,4 +83,92 @@ def dashboard_view(request):
         'upcoming_appointments': upcoming_appointments,
         'appointment_history': appointment_history,
         'active_prescriptions': active_prescriptions,
+        'providers': Provider.objects.all(),  # was missing
+    })
+
+@login_required
+def schedule_appointment(request):
+    if request.method == 'POST':
+        patient = Patient.objects.get(user=request.user)
+        provider = Provider.objects.get(id=request.POST['provider_id'])
+        date = datetime.date.fromisoformat(request.POST['date'])
+        time = datetime.time.fromisoformat(request.POST['time'])
+        reason = request.POST['reason']
+
+        Appointment.objects.create(
+            patient=patient,
+            provider=provider,
+            date=date,
+            time=time,
+            reason=reason,
+            status='pending'
+        )
+        messages.success(request, 'Appointment requested successfully.')
+        return redirect('dashboard')
+    
+    return redirect('dashboard')
+
+def get_available_slots(request):  # was missing entirely
+    provider_id = request.GET.get('provider_id')
+    date_str = request.GET.get('date')
+
+    if not provider_id or not date_str:
+        return JsonResponse({'slots': []})
+
+    date = datetime.date.fromisoformat(date_str)
+    day_of_week = date.weekday()
+
+    try:
+        availability = ProviderAvailability.objects.get(
+            provider_id=provider_id,
+            day_of_week=day_of_week
+        )
+    except ProviderAvailability.DoesNotExist:
+        return JsonResponse({'slots': []})
+
+    booked_times = Appointment.objects.filter(
+        provider_id=provider_id,
+        date=date,
+        status='scheduled'
+    ).values_list('time', flat=True)
+
+    all_slots = availability.get_time_slots()
+    available = [t.strftime('%H:%M') for t in all_slots if t not in booked_times]
+
+    return JsonResponse({'slots': available})
+
+def approve_appointment(request, appointment_id):
+    appointment = Appointment.objects.get(id=appointment_id)
+    appointment.status = 'scheduled'
+    appointment.save()
+    messages.success(request, 'Appointment approved.')
+    return redirect('provider_dashboard')
+
+def deny_appointment(request, appointment_id):
+    appointment = Appointment.objects.get(id=appointment_id)
+    appointment.status = 'cancelled'
+    appointment.save()
+    messages.success(request, 'Appointment denied.')
+    return redirect('provider_dashboard')
+
+@login_required
+def provider_dashboard_view(request):
+    try:
+        provider = Provider.objects.get(user=request.user)
+        pending_appointments = Appointment.objects.filter(
+            provider=provider,
+            status='pending'
+        ).order_by('date', 'time')
+        upcoming_appointments = Appointment.objects.filter(
+            provider=provider,
+            status='scheduled',
+            date__gte=datetime.date.today()
+        ).order_by('date', 'time')
+    except Provider.DoesNotExist:
+        pending_appointments = []
+        upcoming_appointments = []
+
+    return render(request, 'accounts/provider_dashboard.html', {
+        'pending_appointments': pending_appointments,
+        'upcoming_appointments': upcoming_appointments,
     })

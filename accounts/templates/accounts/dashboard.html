@@ -163,6 +163,92 @@
             <h2>Billing</h2>
             <p>No billing information available.</p>
         </div>
+
+        <div class="card" style="grid-column: span 2;">
+            <div class="card-icon">📝</div>
+            <h2>Request Appointment</h2>
+
+            <div style="display:flex; gap:15px; flex-wrap:wrap; margin-bottom:15px;">
+                <div>
+                    <label style="display:block; color:#888; font-size:0.9rem;">Provider</label>
+                    <select id="provider-select" style="padding:8px; border-radius:5px; border:1px solid #ddd;">
+                        <option value="">-- Select Provider --</option>
+                        {% for provider in providers %}
+                            <option value="{{ provider.id }}">Dr. {{ provider.user.last_name }} - {{ provider.specialization }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label style="display:block; color:#888; font-size:0.9rem;">Date</label>
+                    <input type="date" id="date-select" style="padding:8px; border-radius:5px; border:1px solid #ddd;">
+                </div>
+                <div>
+                    <label style="display:block; color:#888; font-size:0.9rem;">Time</label>
+                    <select id="time-select" style="padding:8px; border-radius:5px; border:1px solid #ddd;">
+                        <option value="">-- Select Date First --</option>
+                    </select>
+                </div>
+                <div style="flex:1; min-width:200px;">
+                    <label style="display:block; color:#888; font-size:0.9rem;">Reason</label>
+                    <input type="text" id="reason-input" placeholder="Reason for visit" style="padding:8px; border-radius:5px; border:1px solid #ddd; width:100%;">
+                </div>
+            </div>
+
+            <button onclick="submitAppointment()" style="background-color:#2c3e50; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer;">
+                Request Appointment
+            </button>
+
+            <script>
+                function fetchSlots() {
+                    const providerId = document.getElementById('provider-select').value;
+                    const date = document.getElementById('date-select').value;
+                    const timeSelect = document.getElementById('time-select');
+
+                    if (!providerId || !date) return;
+
+                    fetch(`/accounts/available-slots/?provider_id=${providerId}&date=${date}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            timeSelect.innerHTML = '';
+                            if (data.slots.length === 0) {
+                                timeSelect.innerHTML = '<option value="">No slots available</option>';
+                            } else {
+                                data.slots.forEach(slot => {
+                                    timeSelect.innerHTML += `<option value="${slot}">${slot}</option>`;
+                                });
+                            }
+                        });
+                }
+
+                document.getElementById('provider-select').addEventListener('change', fetchSlots);
+                document.getElementById('date-select').addEventListener('change', fetchSlots);
+
+                function submitAppointment() {
+                    const providerId = document.getElementById('provider-select').value;
+                    const date = document.getElementById('date-select').value;
+                    const time = document.getElementById('time-select').value;
+                    const reason = document.getElementById('reason-input').value;
+
+                    if (!providerId || !date || !time || !reason) {
+                        alert('Please fill out all fields.');
+                        return;
+                    }
+
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = "{% url 'schedule_appointment' %}";
+                    form.innerHTML = `
+                        <input name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+                        <input name="provider_id" value="${providerId}">
+                        <input name="date" value="${date}">
+                        <input name="time" value="${time}">
+                        <input name="reason" value="${reason}">
+                    `;
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            </script>
+        </div>
     </div>
 </body>
 </html>

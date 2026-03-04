@@ -91,6 +91,7 @@ class Admin(models.Model):
 
 class Appointment(models.Model):
     STATUS_CHOICES = [
+        ('pending', 'Pending Approval'),      # add this
         ('scheduled', 'Scheduled'),
         ('completed', 'Completed'),
         ('cancelled', 'Cancelled'),
@@ -147,3 +148,33 @@ class Prescription(models.Model):
         today = timezone.now().date()
         not_expired = self.end_date is None or self.end_date >= today
         return self.status == 'active' and not_expired
+    
+class ProviderAvailability(models.Model):
+    DAY_CHOICES = [
+        (0, 'Monday'),
+        (1, 'Tuesday'),
+        (2, 'Wednesday'),
+        (3, 'Thursday'),
+        (4, 'Friday'),
+        (5, 'Saturday'),
+        (6, 'Sunday'),
+    ]
+
+    provider = models.ForeignKey(Provider, on_delete=models.CASCADE, related_name='availability')
+    day_of_week = models.IntegerField(choices=DAY_CHOICES)
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+    slot_duration = models.IntegerField(default=30)  # in minutes
+
+    def __str__(self):
+        return f"Dr. {self.provider.user.last_name} - {self.get_day_of_week_display()} {self.start_time} to {self.end_time}"
+
+    def get_time_slots(self):
+        import datetime
+        slots = []
+        current = datetime.datetime.combine(datetime.date.today(), self.start_time)
+        end = datetime.datetime.combine(datetime.date.today(), self.end_time)
+        while current < end:
+            slots.append(current.time())
+            current += datetime.timedelta(minutes=self.slot_duration)
+        return slots
