@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Patient Portal</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f4f8;
+        }
+        h1 {
+            color: #2c3e50;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        p {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .login-btn {
+            background-color: #3498db;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .login-btn:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <h1>Welcome to the Patient Portal</h1>
+    <p>Manage your appointments, records, and more.</p>
+    <a href="{% url 'login' %}" class="login-btn">Login</a>
+    <a href="{% url 'register' %}" class="login-btn" style="background-color: #2ecc71; margin-top: 10px;">Register Account</a>
+</body>
+</html>

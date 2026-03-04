@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Patient Dashboard - Patient Portal</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f4f8;
+        }
+        .navbar {
+            background-color: #2c3e50;
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .navbar h1 { font-size: 1.3rem; }
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            background-color: #e74c3c;
+            padding: 8px 16px;
+            border-radius: 5px;
+        }
+        .navbar a:hover { background-color: #c0392b; }
+        .welcome {
+            text-align: center;
+            padding: 30px;
+            color: #2c3e50;
+        }
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            padding: 20px 40px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .card {
+            background-color: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .card h2 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            border-bottom: 2px solid #f0f4f8;
+            padding-bottom: 10px;
+        }
+        .card p {
+            color: #888;
+            font-style: italic;
+        }
+        .card-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <h1>Patient Portal</h1>
+        <a href="{% url 'logout' %}">Logout</a>
+    </div>
+
+    <div class="welcome">
+        <h2>Welcome, {{ user.first_name }} {{ user.last_name }}</h2>
+        <p>Here is an overview of your health information.</p>
+    </div>
+
+    <div class="cards">
+        <div class="card">
+            <div class="card-icon">📅</div>
+            <h2>Upcoming Appointments</h2>
+            {% if upcoming_appointments %}
+                <table style="width:100%; border-collapse: collapse;">
+                    <tr style="text-align:left; color:#888; font-size:0.9rem;">
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Provider</th>
+                        <th>Reason</th>
+                        <th>Status</th>
+                    </tr>
+                    {% for appointment in upcoming_appointments %}
+                    <tr style="border-top: 1px solid #f0f4f8; padding: 5px 0;">
+                        <td>{{ appointment.date }}</td>
+                        <td>{{ appointment.time }}</td>
+                        <td>Dr. {{ appointment.provider.user.last_name }}</td>
+                        <td>{{ appointment.reason }}</td>
+                        <td>{{ appointment.status }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            {% else %}
+                <p>No upcoming appointments.</p>
+            {% endif %}
+
+            <br>
+            <h2>Appointment History</h2>
+            {% if appointment_history %}
+                <table style="width:100%; border-collapse: collapse;">
+                    <tr style="text-align:left; color:#888; font-size:0.9rem;">
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Provider</th>
+                        <th>Reason</th>
+                        <th>Status</th>
+                    </tr>
+                    {% for appointment in appointment_history %}
+                    <tr style="border-top: 1px solid #f0f4f8;">
+                        <td>{{ appointment.date }}</td>
+                        <td>{{ appointment.time }}</td>
+                        <td>Dr. {{ appointment.provider.user.last_name }}</td>
+                        <td>{{ appointment.reason }}</td>
+                        <td>{{ appointment.status }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            {% else %}
+                <p>No appointment history.</p>
+            {% endif %}
+        </div>
+
+        <div class="card">
+            <div class="card-icon">💊</div>
+            <h2>Active Prescriptions</h2>
+            {% if active_prescriptions %}
+                <table style="width:100%; border-collapse: collapse;">
+                    <tr style="text-align:left; color:#888; font-size:0.9rem;">
+                        <th>Medication</th>
+                        <th>Dosage</th>
+                        <th>Frequency</th>
+                        <th>Prescribed By</th>
+                        <th>Refills Left</th>
+                    </tr>
+                    {% for rx in active_prescriptions %}
+                    <tr style="border-top: 1px solid #f0f4f8;">
+                        <td>{{ rx.medication_name }}</td>
+                        <td>{{ rx.dosage }}</td>
+                        <td>{{ rx.frequency }}</td>
+                        <td>Dr. {{ rx.provider.user.last_name }}</td>
+                        <td>{{ rx.refills_remaining }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            {% else %}
+                <p>No active prescriptions.</p>
+            {% endif %}
+        </div>
+
+        <div class="card">
+            <div class="card-icon">🧪</div>
+            <h2>Lab Results</h2>
+            <p>No lab results available.</p>
+        </div>
+
+        <div class="card">
+            <div class="card-icon">💳</div>
+            <h2>Billing</h2>
+            <p>No billing information available.</p>
+        </div>
+    </div>
+</body>
+</html>
