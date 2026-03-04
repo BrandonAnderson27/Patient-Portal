@@ -127,8 +127,29 @@
 
         <div class="card">
             <div class="card-icon">💊</div>
-            <h2>Prescriptions</h2>
-            <p>No active prescriptions.</p>
+            <h2>Active Prescriptions</h2>
+            {% if active_prescriptions %}
+                <table style="width:100%; border-collapse: collapse;">
+                    <tr style="text-align:left; color:#888; font-size:0.9rem;">
+                        <th>Medication</th>
+                        <th>Dosage</th>
+                        <th>Frequency</th>
+                        <th>Prescribed By</th>
+                        <th>Refills Left</th>
+                    </tr>
+                    {% for rx in active_prescriptions %}
+                    <tr style="border-top: 1px solid #f0f4f8;">
+                        <td>{{ rx.medication_name }}</td>
+                        <td>{{ rx.dosage }}</td>
+                        <td>{{ rx.frequency }}</td>
+                        <td>Dr. {{ rx.provider.user.last_name }}</td>
+                        <td>{{ rx.refills_remaining }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            {% else %}
+                <p>No active prescriptions.</p>
+            {% endif %}
         </div>
 
         <div class="card">

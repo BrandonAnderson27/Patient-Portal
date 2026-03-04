@@ -37,6 +37,15 @@ class Patient(models.Model):
 
     def __str__(self):
         return f"{self.user.first_name} {self.user.last_name}"
+    
+    def get_active_prescriptions(self):
+        from django.utils import timezone
+        today = timezone.now().date()
+        return self.prescriptions.filter(
+            status='active'
+        ).filter(
+            models.Q(end_date__isnull=True) | models.Q(end_date__gte=today)
+        ).order_by('medication_name')
 
 class AccountApprovalRequest(models.Model):
     STATUS_CHOICES = [
@@ -98,3 +107,43 @@ class Appointment(models.Model):
 
     def __str__(self):
         return f"{self.patient.user.username} with Dr. {self.provider.user.last_name} on {self.date} at {self.time}"
+    
+class Prescription(models.Model):
+    STATUS_CHOICES = [
+        ('active', 'Active'),
+        ('discontinued', 'Discontinued'),
+        ('expired', 'Expired'),
+        ('on_hold', 'On Hold'),
+    ]
+
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='prescriptions')
+    provider = models.ForeignKey(Provider, on_delete=models.CASCADE, related_name='prescriptions')
+    appointment = models.ForeignKey(
+        Appointment, on_delete=models.SET_NULL, null=True, blank=True, related_name='prescriptions'
+    )
+
+    medication_name = models.CharField(max_length=255)
+    dosage = models.CharField(max_length=100)           # e.g. "500mg"
+    frequency = models.CharField(max_length=100)        # e.g. "Twice daily"
+    route = models.CharField(max_length=100, blank=True) # e.g. "Oral", "Topical"
+    instructions = models.TextField(blank=True)          # e.g. "Take with food"
+
+    prescribed_date = models.DateField()
+    start_date = models.DateField()
+    end_date = models.DateField(null=True, blank=True)  # null = indefinite
+    refills_allowed = models.PositiveIntegerField(default=0)
+    refills_remaining = models.PositiveIntegerField(default=0)
+
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.medication_name} for {self.patient} prescribed by {self.provider}"
+
+    def is_active(self):
+        from django.utils import timezone
+        today = timezone.now().date()
+        not_expired = self.end_date is None or self.end_date >= today
+        return self.status == 'active' and not_expired
