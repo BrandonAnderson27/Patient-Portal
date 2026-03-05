@@ -11,4 +11,5 @@ urlpatterns = [
     path('provider-dashboard/', views.provider_dashboard_view, name='provider_dashboard'),
     path('schedule/', views.schedule_appointment, name='schedule_appointment'),
     path('available-slots/', views.get_available_slots, name='available_slots'),
+    path('receptionist-dashboard/', views.receptionist_dashboard_view, name='receptionist_dashboard'),
 ]

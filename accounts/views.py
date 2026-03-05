@@ -4,7 +4,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
-from accounts.models import Appointment, User, Patient, AccountApprovalRequest, Provider, ProviderAvailability
+from accounts.models import Appointment, User, Patient, AccountApprovalRequest, Provider, ProviderAvailability, Receptionist
 import datetime
 
 def login_view(request):
@@ -23,6 +23,8 @@ def login_view(request):
             messages.success(request, f'Welcome, {user.username}! Login successful.')
             if user.role == 'provider':
                 return redirect('provider_dashboard')
+            if user.role == 'receptionist':
+                return redirect('receptionist_dashboard')
             return redirect('dashboard')
         else:
             messages.error(request, 'Invalid username or password. Please try again.')
@@ -171,4 +173,33 @@ def provider_dashboard_view(request):
     return render(request, 'accounts/provider_dashboard.html', {
         'pending_appointments': pending_appointments,
         'upcoming_appointments': upcoming_appointments,
+    })
+    
+@login_required
+def receptionist_dashboard_view(request):
+    try:
+        receptionist = Receptionist.objects.get(user=request.user)
+        provider = receptionist.provider
+        if provider:
+            pending_appointments = Appointment.objects.filter(
+                provider=provider,
+                status='pending'
+            ).order_by('date', 'time')
+            upcoming_appointments = Appointment.objects.filter(
+                provider=provider,
+                status='scheduled',
+                date__gte=datetime.date.today()
+            ).order_by('date', 'time')
+        else:
+            pending_appointments = []
+            upcoming_appointments = []
+    except Receptionist.DoesNotExist:
+        pending_appointments = []
+        upcoming_appointments = []
+        provider = None
+
+    return render(request, 'accounts/receptionist_dashboard.html', {
+        'pending_appointments': pending_appointments,
+        'upcoming_appointments': upcoming_appointments,
+        'provider': provider,
     })
