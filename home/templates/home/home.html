@@ -1,45 +1,607 @@
+{% load static %}
 <!DOCTYPE html>
-<html>
+<html lang="en" data-theme="light">
 <head>
-    <title>Patient Portal</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f0f4f8;
-        }
-        h1 {
-            color: #2c3e50;
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-        }
-        p {
-            color: #666;
-            margin-bottom: 30px;
-        }
-        .login-btn {
-            background-color: #3498db;
-            color: white;
-            padding: 12px 30px;
-            border: none;
-            border-radius: 5px;
-            font-size: 1rem;
-            cursor: pointer;
-            text-decoration: none;
-        }
-        .login-btn:hover {
-            background-color: #2980b9;
-        }
-    </style>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Patient Portal — Your Health, Managed Smarter</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f0f4f1;
+      --bg2: #e8efe9;
+      --surface: #ffffff;
+      --panel: #1b2e26;
+      --panel2: #243d33;
+      --accent: #2d6a4f;
+      --accent2: #52b788;
+      --accent-pale: #edf7f1;
+      --accent-pale2: #d8f0e3;
+      --text: #1a2820;
+      --text2: #2d3e35;
+      --muted: #6b7c72;
+      --border: #d0ddd4;
+      --border2: #b8cebe;
+      --shadow: 0 4px 24px rgba(45,106,79,0.08);
+      --shadow2: 0 8px 40px rgba(45,106,79,0.13);
+      --radius: 14px;
+      --radius2: 20px;
+    }
+
+    [data-theme="dark"] {
+      --bg: #0f1a14;
+      --bg2: #162018;
+      --surface: #1b2e26;
+      --panel: #0f1a14;
+      --panel2: #162018;
+      --accent: #52b788;
+      --accent2: #74c99e;
+      --accent-pale: #1b3326;
+      --accent-pale2: #1f3d2c;
+      --text: #e8f0ea;
+      --text2: #c5d9c9;
+      --muted: #7a9982;
+      --border: #2a3d30;
+      --border2: #344d3a;
+      --shadow: 0 4px 24px rgba(0,0,0,0.3);
+      --shadow2: 0 8px 40px rgba(0,0,0,0.4);
+    }
+
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; transition: background .3s, color .3s; overflow-x: hidden; }
+
+    /* ── Page load animation ── */
+    .page-loader {
+      position: fixed; inset: 0; background: var(--panel);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 9999; transition: opacity .5s, visibility .5s;
+    }
+    .page-loader.done { opacity: 0; visibility: hidden; }
+    .loader-mark { width: 48px; height: 48px; border-radius: 12px; background: var(--accent2); display: flex; align-items: center; justify-content: center; animation: pulse 1s ease-in-out infinite; }
+    .loader-mark svg { width: 26px; height: 26px; }
+    @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
+
+    /* ── Toast ── */
+    .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 1000; display: flex; flex-direction: column; gap: 10px; }
+    .toast { padding: 14px 20px; border-radius: 10px; font-size: 14px; font-weight: 500; color: #fff; background: var(--panel); border-left: 4px solid var(--accent2); box-shadow: var(--shadow2); transform: translateX(120%); transition: transform .3s cubic-bezier(.34,1.56,.64,1); max-width: 320px; }
+    .toast.show { transform: translateX(0); }
+    .toast.success { border-left-color: #52b788; }
+    .toast.error { border-left-color: #e05c5c; }
+
+    /* ── Nav ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      padding: 0 48px; height: 68px;
+      display: flex; align-items: center; justify-content: space-between;
+      background: rgba(240,244,241,0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid transparent;
+      transition: all .3s;
+    }
+    [data-theme="dark"] nav { background: rgba(15,26,20,0.85); }
+    nav.scrolled { border-bottom-color: var(--border); box-shadow: var(--shadow); }
+    .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .nav-mark { width: 36px; height: 36px; border-radius: 9px; background: var(--accent); display: flex; align-items: center; justify-content: center; }
+    .nav-mark svg { width: 20px; height: 20px; }
+    .nav-logo span { font-family: 'Lora', serif; font-size: 17px; font-weight: 600; color: var(--text); }
+    .nav-links { display: flex; align-items: center; gap: 6px; }
+    .nav-link { padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; color: var(--muted); text-decoration: none; transition: all .16s; }
+    .nav-link:hover { color: var(--text); background: var(--accent-pale); }
+    .nav-right { display: flex; align-items: center; gap: 10px; }
+    .btn-ghost { padding: 9px 20px; border: 1.5px solid var(--border2); border-radius: 9px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; color: var(--text); background: none; cursor: pointer; text-decoration: none; transition: all .16s; }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-pale); }
+    .btn-primary { padding: 9px 22px; background: var(--accent); border: none; border-radius: 9px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; color: #fff; cursor: pointer; text-decoration: none; transition: all .16s; }
+    .btn-primary:hover { background: var(--panel2); transform: translateY(-1px); box-shadow: var(--shadow); }
+
+    /* Theme toggle */
+    .theme-toggle { width: 36px; height: 36px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--surface); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .16s; }
+    .theme-toggle:hover { border-color: var(--accent); background: var(--accent-pale); }
+    .theme-toggle svg { width: 17px; height: 17px; stroke: var(--muted); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+    /* Hamburger */
+    .hamburger { display: none; width: 36px; height: 36px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--surface); cursor: pointer; flex-direction: column; align-items: center; justify-content: center; gap: 5px; }
+    .hamburger span { display: block; width: 18px; height: 2px; background: var(--text); border-radius: 2px; transition: all .25s; }
+    .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .hamburger.open span:nth-child(2) { opacity: 0; }
+    .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    /* Mobile menu */
+    .mobile-menu {
+      position: fixed; top: 68px; left: 0; right: 0; z-index: 99;
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 20px 24px; display: flex; flex-direction: column; gap: 8px;
+      transform: translateY(-110%); transition: transform .3s cubic-bezier(.4,0,.2,1);
+      box-shadow: var(--shadow2);
+    }
+    .mobile-menu.open { transform: translateY(0); }
+    .mobile-menu a { padding: 12px 16px; border-radius: 9px; font-size: 15px; font-weight: 500; color: var(--text); text-decoration: none; transition: background .16s; }
+    .mobile-menu a:hover { background: var(--accent-pale); color: var(--accent); }
+    .mobile-divider { height: 1px; background: var(--border); margin: 4px 0; }
+
+    /* ── Hero ── */
+    .hero { min-height: 100vh; display: flex; align-items: center; padding: 68px 48px 0; position: relative; overflow: hidden; }
+    .hero::before { content: ''; position: absolute; width: 600px; height: 600px; border-radius: 50%; background: radial-gradient(circle, rgba(82,183,136,0.12) 0%, transparent 65%); top: -100px; right: -100px; pointer-events: none; }
+    .hero::after { content: ''; position: absolute; width: 400px; height: 400px; border-radius: 50%; background: radial-gradient(circle, rgba(45,106,79,0.08) 0%, transparent 65%); bottom: 0; left: -100px; pointer-events: none; }
+    .hero-inner { max-width: 1200px; margin: 0 auto; width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; position: relative; z-index: 1; }
+    .hero-left { animation: fadeUp .8s ease both; }
+    .hero-badge { display: inline-flex; align-items: center; gap: 8px; background: var(--accent-pale2); border: 1px solid var(--border2); color: var(--accent); font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 6px 14px; border-radius: 20px; margin-bottom: 24px; }
+    .hero-badge span { width: 6px; height: 6px; border-radius: 50%; background: var(--accent2); animation: blink 1.5s ease-in-out infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+    .hero h1 { font-family: 'Lora', serif; font-size: 54px; font-weight: 600; line-height: 1.15; color: var(--text); margin-bottom: 20px; }
+    .hero h1 em { font-style: italic; color: var(--accent); }
+    .hero-typing { font-family: 'Lora', serif; font-size: 54px; font-weight: 600; color: var(--accent2); border-right: 3px solid var(--accent2); padding-right: 4px; white-space: nowrap; overflow: hidden; }
+    .hero-desc { font-size: 17px; color: var(--muted); line-height: 1.7; margin-bottom: 36px; max-width: 480px; }
+    .hero-ctas { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 48px; }
+    .cta-main { padding: 14px 32px; background: var(--accent); color: #fff; border: none; border-radius: 11px; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; text-decoration: none; transition: all .2s; display: inline-flex; align-items: center; gap: 8px; }
+    .cta-main:hover { background: var(--panel); transform: translateY(-2px); box-shadow: var(--shadow2); }
+    .cta-sub { padding: 14px 28px; background: var(--surface); color: var(--text); border: 1.5px solid var(--border2); border-radius: 11px; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; text-decoration: none; transition: all .2s; }
+    .cta-sub:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-pale); }
+    .hero-stats { display: flex; gap: 32px; }
+    .stat { display: flex; flex-direction: column; }
+    .stat-num { font-family: 'Lora', serif; font-size: 28px; font-weight: 600; color: var(--text); }
+    .stat-label { font-size: 12px; color: var(--muted); font-weight: 500; }
+
+    /* Hero card mockup */
+    .hero-right { animation: fadeUp .8s .2s ease both; }
+    .mockup { background: var(--surface); border-radius: var(--radius2); border: 1px solid var(--border); box-shadow: var(--shadow2); overflow: hidden; }
+    .mockup-bar { background: var(--bg2); padding: 12px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border); }
+    .dots { display: flex; gap: 6px; }
+    .dot { width: 11px; height: 11px; border-radius: 50%; }
+    .dot.r { background: #ff6b6b; }
+    .dot.y { background: #ffd93d; }
+    .dot.g { background: #6bcb77; }
+    .mockup-url { flex: 1; background: var(--bg); border-radius: 6px; padding: 5px 12px; font-size: 12px; color: var(--muted); text-align: center; }
+    .mockup-body { padding: 20px; }
+    .mockup-greeting { font-size: 14px; color: var(--muted); margin-bottom: 4px; }
+    .mockup-name { font-family: 'Lora', serif; font-size: 20px; font-weight: 600; color: var(--text); margin-bottom: 16px; }
+    .mockup-cards { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 16px; }
+    .mockup-card { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px; text-align: center; }
+    .mockup-card-num { font-family: 'Lora', serif; font-size: 22px; font-weight: 600; color: var(--accent); }
+    .mockup-card-label { font-size: 10px; color: var(--muted); margin-top: 2px; }
+    .mockup-section { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+    .mockup-appt { display: flex; align-items: center; gap: 10px; padding: 10px; background: var(--bg); border-radius: 8px; margin-bottom: 8px; }
+    .appt-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent2); flex-shrink: 0; }
+    .appt-dot.pending { background: #f4a261; }
+    .appt-info { flex: 1; }
+    .appt-name { font-size: 12px; font-weight: 600; color: var(--text); }
+    .appt-time { font-size: 11px; color: var(--muted); }
+    .appt-badge { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 4px; }
+    .appt-badge.upcoming { background: var(--accent-pale); color: var(--accent); }
+    .appt-badge.pending { background: #fef3e2; color: #b45309; }
+
+    @keyframes fadeUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
+
+    /* ── Features ── */
+    .features { padding: 100px 48px; }
+    .features-inner { max-width: 1200px; margin: 0 auto; }
+    .section-badge { display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); background: var(--accent-pale); border: 1px solid var(--border2); padding: 5px 14px; border-radius: 20px; margin-bottom: 16px; }
+    .section-title { font-family: 'Lora', serif; font-size: 38px; font-weight: 600; color: var(--text); margin-bottom: 12px; }
+    .section-sub { font-size: 16px; color: var(--muted); max-width: 500px; line-height: 1.65; margin-bottom: 56px; }
+    .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .feat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; transition: all .2s; position: relative; overflow: hidden; }
+    .feat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--accent2); transform: scaleX(0); transition: transform .2s; }
+    .feat-card:hover { transform: translateY(-4px); box-shadow: var(--shadow2); border-color: var(--border2); }
+    .feat-card:hover::before { transform: scaleX(1); }
+    .feat-icon-wrap { width: 44px; height: 44px; border-radius: 10px; background: var(--accent-pale); display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+    .feat-icon-wrap svg { width: 22px; height: 22px; stroke: var(--accent); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .feat-card h3 { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+    .feat-card p { font-size: 14px; color: var(--muted); line-height: 1.6; }
+
+    /* ── CTA Section ── */
+    .cta-section { padding: 80px 48px; }
+    .cta-inner { max-width: 1200px; margin: 0 auto; background: var(--panel); border-radius: var(--radius2); padding: 64px; display: flex; align-items: center; justify-content: space-between; gap: 40px; position: relative; overflow: hidden; }
+    .cta-inner::before { content: ''; position: absolute; width: 400px; height: 400px; border-radius: 50%; background: radial-gradient(circle, rgba(82,183,136,0.15) 0%, transparent 65%); top: -150px; right: -100px; pointer-events: none; }
+    .cta-text h2 { font-family: 'Lora', serif; font-size: 34px; font-weight: 600; color: #fff; margin-bottom: 12px; }
+    .cta-text p { font-size: 15px; color: rgba(255,255,255,0.55); line-height: 1.65; max-width: 440px; }
+    .cta-btns { display: flex; gap: 12px; flex-shrink: 0; position: relative; z-index: 1; }
+    .cta-btn-white { padding: 13px 28px; background: #fff; color: var(--panel); border: none; border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; transition: all .16s; }
+    .cta-btn-white:hover { background: var(--accent-pale); }
+    .cta-btn-outline { padding: 13px 24px; background: none; color: rgba(255,255,255,0.7); border: 1.5px solid rgba(255,255,255,0.2); border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; text-decoration: none; transition: all .16s; }
+    .cta-btn-outline:hover { border-color: rgba(255,255,255,0.5); color: #fff; }
+
+    /* ── Footer ── */
+    footer { background: var(--panel); padding: 40px 48px; }
+    .footer-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
+    .footer-logo { display: flex; align-items: center; gap: 10px; }
+    .footer-logo span { font-family: 'Lora', serif; font-size: 15px; color: rgba(255,255,255,0.7); }
+    .footer-copy { font-size: 13px; color: rgba(255,255,255,0.3); }
+
+    /* Responsive */
+    @media (max-width: 1024px) { .features-grid { grid-template-columns: repeat(2,1fr); } }
+    @media (max-width: 768px) {
+      nav { padding: 0 20px; }
+      .nav-links, .nav-right .btn-ghost, .nav-right .btn-primary { display: none; }
+      .hamburger { display: flex; }
+      .hero { padding: 68px 20px 0; }
+      .hero-inner { grid-template-columns: 1fr; gap: 40px; }
+      .hero h1, .hero-typing { font-size: 36px; }
+      .hero-right { display: none; }
+      .features { padding: 60px 20px; }
+      .features-grid { grid-template-columns: 1fr; }
+      .cta-section { padding: 40px 20px; }
+      .cta-inner { flex-direction: column; padding: 40px 28px; }
+      .cta-btns { flex-direction: column; width: 100%; }
+      footer { padding: 32px 20px; }
+      .footer-inner { flex-direction: column; gap: 12px; text-align: center; }
+    }
+
+    /* Print */
+    @media print { nav, .hero-right, .cta-section, footer { display: none; } }
+
+    /* About Section */
+    .about-section { padding: 100px 48px; background: var(--bg); }
+    .about-inner { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
+    .about-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .about-card { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 24px; transition: box-shadow .2s; }
+    .about-card:hover { box-shadow: var(--shadow); }
+    .about-card-icon { width: 40px; height: 40px; border-radius: 10px; background: var(--accent-pale); display: flex; align-items: center; justify-content: center; margin-bottom: 12px; }
+    .about-card-icon svg { width: 20px; height: 20px; stroke: var(--accent); }
+    .about-card h4 { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+    .about-card p { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+    /* Contact Section */
+    .contact-section { padding: 100px 48px; background: var(--panel); border-top: 1px solid var(--border); }
+    .contact-inner { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; }
+    .contact-info-list { display: flex; flex-direction: column; gap: 20px; }
+    .contact-info-item { display: flex; align-items: flex-start; gap: 14px; }
+    .contact-info-icon { width: 40px; height: 40px; border-radius: 10px; background: var(--accent-pale); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .contact-info-icon svg { width: 18px; height: 18px; stroke: var(--accent); }
+    .contact-info-item strong { font-size: 14px; font-weight: 600; color: var(--text); display: block; margin-bottom: 2px; }
+    .contact-info-item p { font-size: 13px; color: var(--muted); margin: 0; }
+    .contact-form-card { background: var(--bg); border: 1px solid var(--border); border-radius: 18px; padding: 36px; }
+    .contact-form-card h3 { font-family: 'Lora', serif; font-size: 20px; font-weight: 600; color: var(--text); margin-bottom: 24px; }
+    .contact-field { margin-bottom: 16px; }
+    .contact-field label { display: block; font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 6px; }
+    .contact-field input, .contact-field textarea { width: 100%; padding: 10px 14px; border-radius: 9px; border: 1px solid var(--border); background: var(--panel); color: var(--text); font-size: 14px; font-family: inherit; resize: vertical; box-sizing: border-box; transition: border-color .15s; }
+    .contact-field input:focus, .contact-field textarea:focus { outline: none; border-color: var(--accent); }
+    .contact-submit { width: 100%; padding: 12px; border-radius: 9px; border: none; background: var(--accent); color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; transition: opacity .15s; margin-top: 4px; }
+    .contact-submit:hover { opacity: 0.88; }
+
+    @media (max-width: 768px) {
+      .about-inner, .contact-inner { grid-template-columns: 1fr; gap: 40px; }
+      .about-section, .contact-section { padding: 60px 20px; }
+    }
+  </style>
 </head>
 <body>
-    <h1>Welcome to the Patient Portal</h1>
-    <p>Manage your appointments, records, and more.</p>
-    <a href="{% url 'login' %}" class="login-btn">Login</a>
+
+<!-- Page Loader -->
+<div class="page-loader" id="loader">
+  <div class="loader-mark">
+    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+    </svg>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toasts"></div>
+
+<!-- NAV -->
+<nav id="navbar">
+  <a href="{% url 'home' %}" class="nav-logo">
+    <div class="nav-mark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+      </svg>
+    </div>
+    <span>Patient Portal</span>
+  </a>
+
+  <div class="nav-links">
+    <a href="#hero" class="nav-link">Home</a>
+    <a href="#features" class="nav-link">Features</a>
+    <a href="#about" class="nav-link">About</a>
+    <a href="#contact" class="nav-link">Contact</a>
+  </div>
+
+  <div class="nav-right">
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">
+      <svg id="theme-icon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+    <a href="{% url 'login' %}" class="btn-ghost">Sign In</a>
+    <a href="#" class="btn-primary">Get Started</a>
+    <button class="hamburger" id="hamburger" onclick="toggleMenu()">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- Mobile Menu -->
+<div class="mobile-menu" id="mobile-menu">
+  <a href="#hero">Home</a>
+  <a href="#features">Features</a>
+  <a href="#about">About</a>
+  <a href="#contact">Contact</a>
+  <div class="mobile-divider"></div>
+  <a href="{% url 'login' %}">Sign In</a>
+  <a href="#" style="background:var(--accent);color:#fff;text-align:center;">Get Started</a>
+</div>
+
+<!-- HERO -->
+<section class="hero" id="hero">
+  <div class="hero-inner">
+    <div class="hero-left">
+      <div class="hero-badge"><span></span> HIPAA Compliant · Secure Platform</div>
+      <h1>Your health,<br>managed <em>smarter</em></h1>
+      <p class="hero-desc">Access your medical records, schedule appointments, and communicate with your care team — all from one secure, intuitive portal.</p>
+      <div class="hero-ctas">
+        <a href="{% url 'login' %}" class="cta-main">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
+          Access Portal
+        </a>
+        <a href="#" class="cta-sub">Create account →</a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat"><span class="stat-num" data-count="24">0</span><span class="stat-label">24/7 Available</span></div>
+        <div class="stat"><span class="stat-num" data-count="256">0</span><span class="stat-label">256-bit Encrypted</span></div>
+        <div class="stat"><span class="stat-num" data-count="100">0</span><span class="stat-label">% HIPAA Compliant</span></div>
+      </div>
+    </div>
+
+    <div class="hero-right">
+      <div class="mockup">
+        <div class="mockup-bar">
+          <div class="dots"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
+          <div class="mockup-url">portal.health/dashboard</div>
+        </div>
+        <div class="mockup-body">
+          <div class="mockup-greeting">Good morning,</div>
+          <div class="mockup-name">Alex Johnson 👋</div>
+          <div class="mockup-cards">
+            <div class="mockup-card"><div class="mockup-card-num">3</div><div class="mockup-card-label">Upcoming Appts</div></div>
+            <div class="mockup-card"><div class="mockup-card-num">12</div><div class="mockup-card-label">Lab Results</div></div>
+            <div class="mockup-card"><div class="mockup-card-num">2</div><div class="mockup-card-label">New Messages</div></div>
+          </div>
+          <div class="mockup-section">Next Appointments</div>
+          <div class="mockup-appt">
+            <div class="appt-dot"></div>
+            <div class="appt-info"><div class="appt-name">Dr. Sarah Mitchell</div><div class="appt-time">Tomorrow · 10:00 AM · General Check-up</div></div>
+            <span class="appt-badge upcoming">Upcoming</span>
+          </div>
+          <div class="mockup-appt">
+            <div class="appt-dot pending"></div>
+            <div class="appt-info"><div class="appt-name">Dr. James Park</div><div class="appt-time">Mar 14 · 2:30 PM · Cardiology</div></div>
+            <span class="appt-badge pending">Pending</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+  <div class="features-inner">
+    <div class="section-badge">What's included</div>
+    <h2 class="section-title">Everything you need,<br>in one place</h2>
+    <p class="section-sub">A complete patient experience from scheduling to billing — all secure, all accessible.</p>
+    <div class="features-grid">
+      <div class="feat-card">
+        <div class="feat-icon-wrap"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
+        <h3>Appointment Scheduling</h3>
+        <p>Request, view and manage your upcoming and past appointments with your care team.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon-wrap"><svg viewBox="0 0 24 24"><path d="M9 12h6M9 16h6M9 8h6M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></svg></div>
+        <h3>Medical Records</h3>
+        <p>Access your prescriptions, lab reports and full medical history — downloadable anytime.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon-wrap"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+        <h3>Secure Messaging</h3>
+        <p>Communicate directly with your receptionist and care team through encrypted messaging.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon-wrap"><svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg></div>
+        <h3>Billing & Insurance</h3>
+        <p>View unpaid bills, track insurance claims, and access your full billing history.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon-wrap"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+        <h3>Patient Profile</h3>
+        <p>Keep your personal, insurance and medical information up to date at any time.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon-wrap"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+        <h3>HIPAA Compliant</h3>
+        <p>All data is encrypted and stored securely in compliance with HIPAA privacy regulations.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<!-- ABOUT SECTION -->
+<section class="about-section" id="about">
+  <div class="about-inner">
+    <div class="about-text">
+      <div class="section-badge">Who we are</div>
+      <h2 class="section-title">Built for patients.<br>Trusted by clinics.</h2>
+      <p class="section-sub" style="margin-bottom:24px;">Patient Portal was designed to bridge the gap between patients and healthcare providers. We believe managing your health should be simple, transparent, and stress-free.</p>
+      <p style="font-size:15px;color:var(--muted);line-height:1.75;margin-bottom:16px;">Our platform gives patients direct access to their appointments, medical records, lab results, prescriptions, and billing — all in one secure place. For clinics, it reduces administrative overhead and improves communication with patients.</p>
+      <p style="font-size:15px;color:var(--muted);line-height:1.75;">We're a team of developers and healthcare enthusiasts committed to making modern healthcare accessible to everyone.</p>
+    </div>
+    <div class="about-cards">
+      <div class="about-card">
+        <div class="about-card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <h4>10,000+ Patients</h4>
+        <p>Trusted by thousands of patients across multiple clinics and healthcare providers.</p>
+      </div>
+      <div class="about-card">
+        <div class="about-card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <h4>HIPAA Compliant</h4>
+        <p>Your health data is protected with industry-standard encryption and security practices.</p>
+      </div>
+      <div class="about-card">
+        <div class="about-card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <h4>24/7 Access</h4>
+        <p>View your records, schedule appointments, and message your care team anytime, anywhere.</p>
+      </div>
+      <div class="about-card">
+        <div class="about-card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </div>
+        <h4>Real-Time Updates</h4>
+        <p>Get instant notifications for appointment reminders, lab results, and new messages.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT SECTION -->
+<section class="contact-section" id="contact">
+  <div class="contact-inner">
+    <div class="contact-left">
+      <div class="section-badge">Get in touch</div>
+      <h2 class="section-title">We're here<br>to help.</h2>
+      <p class="section-sub" style="margin-bottom:32px;">Have a question about your account, need technical support, or want to learn more about Patient Portal for your clinic? Reach out and we'll get back to you shortly.</p>
+      <div class="contact-info-list">
+        <div class="contact-info-item">
+          <div class="contact-info-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          </div>
+          <div><strong>Email</strong><p>support@patientportal.com</p></div>
+        </div>
+        <div class="contact-info-item">
+          <div class="contact-info-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.84a16 16 0 0 0 5.25 5.25l1.86-1.86a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          </div>
+          <div><strong>Phone</strong><p>+1 (800) 555-0199</p></div>
+        </div>
+        <div class="contact-info-item">
+          <div class="contact-info-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <div><strong>Support Hours</strong><p>Mon–Fri, 8am – 6pm EST</p></div>
+        </div>
+      </div>
+    </div>
+    <div class="contact-right">
+      <div class="contact-form-card">
+        <h3>Send us a message</h3>
+        <div class="contact-field">
+          <label>Your Name</label>
+          <input type="text" placeholder="John Smith" />
+        </div>
+        <div class="contact-field">
+          <label>Email Address</label>
+          <input type="email" placeholder="john@example.com" />
+        </div>
+        <div class="contact-field">
+          <label>Subject</label>
+          <input type="text" placeholder="How can we help?" />
+        </div>
+        <div class="contact-field">
+          <label>Message</label>
+          <textarea rows="4" placeholder="Tell us more..."></textarea>
+        </div>
+        <button class="contact-submit" onclick="this.textContent='Sent!';this.style.background='var(--accent)';setTimeout(()=>{this.textContent='Send Message';this.style.background='';},2500)">Send Message</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="cta-section">
+  <div class="cta-inner">
+    <div class="cta-text">
+      <h2>Ready to take control of your health?</h2>
+      <p>Join thousands of patients already using the portal to manage their healthcare experience.</p>
+    </div>
+    <div class="cta-btns">
+      <a href="{% url 'login' %}" class="cta-btn-white">Sign In Now</a>
+      <a href="#" class="cta-btn-outline">Create Account</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-logo">
+      <div class="nav-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px">
+          <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+        </svg>
+      </div>
+      <span>Patient Portal</span>
+    </div>
+    <div class="footer-copy">© 2026 Patient Portal · CS 310 Group 4</div>
+  </div>
+</footer>
+
+<script>
+  // Page loader
+  window.addEventListener('load', () => {
+    setTimeout(() => document.getElementById('loader').classList.add('done'), 600);
+  });
+
+  // Navbar scroll
+  window.addEventListener('scroll', () => {
+    document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 20);
+  });
+
+  // Theme toggle
+  function toggleTheme() {
+    const html = document.documentElement;
+    const isDark = html.getAttribute('data-theme') === 'dark';
+    html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    localStorage.setItem('theme', isDark ? 'light' : 'dark');
+    document.getElementById('theme-icon').innerHTML = isDark
+      ? '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>'
+      : '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+  }
+  // Load saved theme
+  const saved = localStorage.getItem('theme');
+  if (saved) {
+    document.documentElement.setAttribute('data-theme', saved);
+    if (saved === 'light') {
+      document.getElementById('theme-icon').innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+    }
+  }
+
+  // Hamburger menu
+  function toggleMenu() {
+    document.getElementById('hamburger').classList.toggle('open');
+    document.getElementById('mobile-menu').classList.toggle('open');
+  }
+
+  // Animated stats
+  function animateCount(el) {
+    const target = parseInt(el.getAttribute('data-count'));
+    const suffix = el.parentElement.querySelector('.stat-label').textContent.includes('bit') ? '-bit' :
+                   el.parentElement.querySelector('.stat-label').textContent.includes('%') ? '%' : '/7';
+    let current = 0;
+    const step = target / 40;
+    const timer = setInterval(() => {
+      current = Math.min(current + step, target);
+      el.textContent = Math.floor(current);
+      if (current >= target) { el.textContent = target + (target === 24 ? '/7' : target === 256 ? '-bit' : '%'); clearInterval(timer); }
+    }, 30);
+  }
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { animateCount(e.target); observer.unobserve(e.target); } });
+  }, { threshold: 0.5 });
+  document.querySelectorAll('[data-count]').forEach(el => observer.observe(el));
+
+  // Toast function (reusable across pages)
+  function showToast(message, type = 'success') {
+    const container = document.getElementById('toasts');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    container.appendChild(toast);
+    setTimeout(() => toast.classList.add('show'), 10);
+    setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3500);
+  }
+</script>
 </body>
 </html>

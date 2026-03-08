@@ -1,0 +1,585 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Patient Portal — Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f0f4f1; --surface: #ffffff; --panel: #1b2e26; --panel2: #243d33;
+      --accent: #2d6a4f; --accent2: #52b788; --accent-pale: #edf7f1; --accent-pale2: #d8f0e3;
+      --text: #1a2820; --muted: #6b7c72; --border: #d0ddd4; --border2: #b8cebe;
+      --error: #c0392b; --error-bg: #fdf0ef; --error-border: #f0b9b5;
+      --success: #1e8449; --success-bg: #edf7f1; --success-border: #a9dfbf;
+      --shadow: 0 4px 24px rgba(45,106,79,0.08); --shadow2: 0 8px 40px rgba(45,106,79,0.13);
+      --sidebar-w: 248px; --radius: 12px;
+    }
+    [data-theme="dark"] {
+      --bg: #0f1a14; --surface: #1b2e26; --panel: #0a1209; --panel2: #162018;
+      --accent: #52b788; --accent2: #74c99e; --accent-pale: #1b3326; --accent-pale2: #1f3d2c;
+      --text: #e8f0ea; --muted: #7a9982; --border: #2a3d30; --border2: #344d3a;
+    }
+    html, body { height: 100%; font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); transition: background .3s, color .3s; }
+
+    /* ── Loader ── */
+    .page-loader { position: fixed; inset: 0; background: var(--panel); display: flex; align-items: center; justify-content: center; z-index: 9999; transition: opacity .5s, visibility .5s; }
+    .page-loader.done { opacity: 0; visibility: hidden; }
+    .loader-mark { width: 44px; height: 44px; border-radius: 11px; background: var(--accent2); display: flex; align-items: center; justify-content: center; animation: pulse 1s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
+
+    /* ── Toast ── */
+
+    /* ── Confirm Modal ── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 500; display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: all .2s; }
+    .modal-overlay.show { opacity: 1; visibility: visible; }
+    .modal { background: var(--surface); border-radius: var(--radius); padding: 32px; max-width: 380px; width: 90%; transform: scale(.95); transition: transform .2s; box-shadow: var(--shadow2); }
+    .modal-overlay.show .modal { transform: scale(1); }
+    .modal h3 { font-family: 'Lora', serif; font-size: 20px; font-weight: 600; color: var(--text); margin-bottom: 10px; }
+    .modal p { font-size: 14px; color: var(--muted); line-height: 1.6; margin-bottom: 24px; }
+    .modal-btns { display: flex; gap: 10px; justify-content: flex-end; }
+    .modal-cancel { padding: 10px 20px; background: var(--bg); border: 1.5px solid var(--border); border-radius: 9px; font-family: 'DM Sans', sans-serif; font-size: 13.5px; cursor: pointer; color: var(--text); }
+    .modal-confirm { padding: 10px 20px; background: var(--error); border: none; border-radius: 9px; font-family: 'DM Sans', sans-serif; font-size: 13.5px; font-weight: 600; cursor: pointer; color: #fff; }
+
+    /* ── Shell ── */
+    .shell { display: flex; min-height: 100vh; }
+
+    /* ── Sidebar ── */
+    .sidebar { width: var(--sidebar-w); background: var(--panel); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; overflow: hidden; transition: transform .3s; }
+    .sidebar::before { content: ''; position: absolute; width: 320px; height: 320px; border-radius: 50%; background: radial-gradient(circle, rgba(82,183,136,0.1) 0%, transparent 65%); top: -80px; left: -80px; pointer-events: none; }
+    .sb-logo { padding: 26px 22px 18px; display: flex; align-items: center; gap: 10px; position: relative; z-index: 1; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .sb-mark { width: 34px; height: 34px; border-radius: 8px; background: var(--accent2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .sb-mark svg { width: 18px; height: 18px; }
+    .sb-logo span { font-family: 'Lora', serif; font-size: 15px; font-weight: 600; color: #fff; }
+    .sb-patient { padding: 16px 22px; border-bottom: 1px solid rgba(255,255,255,0.06); position: relative; z-index: 1; }
+    .sb-avatar { width: 40px; height: 40px; border-radius: 50%; background: rgba(82,183,136,0.2); border: 2px solid rgba(82,183,136,0.35); display: flex; align-items: center; justify-content: center; font-family: 'Lora', serif; font-size: 16px; font-weight: 600; color: var(--accent2); margin-bottom: 8px; }
+    .sb-name { font-size: 13.5px; font-weight: 600; color: #fff; }
+    .sb-id { font-size: 11px; color: rgba(255,255,255,0.38); margin-top: 2px; }
+    .sb-nav { flex: 1; padding: 10px 10px; position: relative; z-index: 1; overflow-y: auto; }
+    .nav-section { font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.25); padding: 14px 12px 6px; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 9px; cursor: pointer; font-size: 13.5px; font-weight: 500; color: rgba(255,255,255,0.55); transition: all .18s; border: none; background: none; width: 100%; text-align: left; position: relative; }
+    .nav-item svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; transition: transform .18s; }
+    .nav-item:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.9); }
+    .nav-item:hover svg { transform: translateX(2px); }
+    .nav-item.active { background: rgba(82,183,136,0.18); color: #fff; }
+    .nav-item.active svg { stroke: var(--accent2); }
+    .nav-badge { margin-left: auto; background: var(--accent2); color: var(--panel); font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; }
+    .sb-bottom { padding: 10px; position: relative; z-index: 1; border-top: 1px solid rgba(255,255,255,0.06); }
+    .sb-actions { display: flex; gap: 6px; padding: 6px 4px; }
+    .sb-action-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 9px; border-radius: 8px; background: none; border: none; font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.4); cursor: pointer; transition: all .16s; }
+    .sb-action-btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .sb-action-btn:hover { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.75); }
+
+    /* ── Main ── */
+    .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; }
+    .topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 32px; height: 62px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+    .topbar-left h2 { font-family: 'Lora', serif; font-size: 19px; font-weight: 600; color: var(--text); }
+    .topbar-left p { font-size: 12px; color: var(--muted); }
+    .topbar-right { display: flex; align-items: center; gap: 10px; }
+    .theme-btn { width: 34px; height: 34px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--bg); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .16s; }
+    .theme-btn:hover { border-color: var(--accent); background: var(--accent-pale); }
+    .theme-btn svg { width: 16px; height: 16px; stroke: var(--muted); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .inbox-btn { display: flex; align-items: center; gap: 7px; padding: 8px 16px; background: var(--accent-pale); color: var(--accent); border: 1px solid var(--border2); border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; transition: all .16s; }
+    .inbox-btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .inbox-btn:hover { background: var(--accent-pale2); }
+    .badge { background: var(--accent); color: #fff; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; }
+
+    /* ── Content ── */
+    .content { padding: 28px 32px; flex: 1; }
+    .tab-panel { display: none; animation: fadeIn .3s ease; }
+    .tab-panel.active { display: block; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+    /* ── Stat cards ── */
+    .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; transition: all .2s; }
+    .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow2); border-color: var(--border2); }
+    .stat-card-icon { width: 38px; height: 38px; border-radius: 9px; background: var(--accent-pale); display: flex; align-items: center; justify-content: center; margin-bottom: 12px; }
+    .stat-card-icon svg { width: 20px; height: 20px; stroke: var(--accent); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .stat-card-num { font-family: 'Lora', serif; font-size: 28px; font-weight: 600; color: var(--text); }
+    .stat-card-label { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    /* ── Profile tabs ── */
+    .profile-tabs { display: flex; gap: 2px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 4px; margin-bottom: 20px; width: fit-content; box-shadow: var(--shadow); }
+    .ptab { padding: 8px 18px; border: none; background: none; border-radius: 7px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; color: var(--muted); cursor: pointer; transition: all .18s; }
+    .ptab.active { background: var(--panel); color: #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.12); }
+
+    /* ── Info card ── */
+    .info-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 26px; }
+    .info-card h3 { font-family: 'Lora', serif; font-size: 17px; font-weight: 600; color: var(--text); margin-bottom: 20px; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
+    .info-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 18px 28px; }
+    .info-row { display: flex; flex-direction: column; gap: 4px; }
+    .info-label { font-size: 10.5px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+    .info-value { font-size: 14.5px; color: var(--text); font-weight: 500; }
+    .info-value.masked { letter-spacing: 0.2em; color: var(--muted); }
+
+    /* ── Update form ── */
+    .update-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 26px; }
+    .update-card h3 { font-family: 'Lora', serif; font-size: 17px; font-weight: 600; color: var(--text); margin-bottom: 20px; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .field { margin-bottom: 0; position: relative; }
+    .field.span-2 { grid-column: span 2; }
+    .field-wrap { position: relative; }
+    .field input[type=text], .field input[type=email], .field input[type=date], .field input[type=tel], .field input[type=password], .field input[type=file], .field textarea, .field select {
+      width: 100%; padding: 17px 14px 7px; border: 1.5px solid var(--border); border-radius: 10px;
+      background: var(--bg); font-family: 'DM Sans', sans-serif; font-size: 13.5px; color: var(--text);
+      outline: none; transition: border-color .16s, box-shadow .16s; resize: vertical; appearance: none;
+    }
+    .field input[type=file] { padding: 12px 14px; }
+    .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(45,106,79,0.08); background: var(--surface); }
+    .field label { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 13.5px; color: var(--muted); pointer-events: none; transition: all .16s; }
+    .field textarea ~ label { top: 16px; transform: none; }
+    .field input:focus ~ label, .field input:not(:placeholder-shown) ~ label,
+    .field select:focus ~ label, .field select:valid ~ label,
+    .field textarea:focus ~ label, .field textarea:not(:placeholder-shown) ~ label { top: 7px; transform: none; font-size: 10px; font-weight: 600; color: var(--accent); letter-spacing: 0.06em; text-transform: uppercase; }
+    .field input::placeholder, .field textarea::placeholder { color: transparent; }
+    .form-actions { display: flex; gap: 10px; margin-top: 22px; }
+    .btn-save { padding: 11px 28px; background: var(--accent); color: #fff; border: none; border-radius: 9px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: all .16s; }
+    .btn-save:hover { background: var(--panel2); transform: translateY(-1px); box-shadow: var(--shadow); }
+    .btn-cancel { padding: 11px 22px; background: var(--surface); color: var(--muted); border: 1.5px solid var(--border); border-radius: 9px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all .16s; }
+    .btn-cancel:hover { border-color: var(--text); color: var(--text); }
+
+    /* ── Section heads ── */
+    .section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+    .section-head h3 { font-family: 'Lora', serif; font-size: 18px; font-weight: 600; }
+    .section-label { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin: 24px 0 10px; }
+
+    /* ── Tables ── */
+    .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .appt-table { width: 100%; border-collapse: collapse; }
+    .appt-table th { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); text-align: left; padding: 12px 18px; background: var(--bg); border-bottom: 1px solid var(--border); }
+    .appt-table td { padding: 14px 18px; font-size: 13.5px; color: var(--text); border-bottom: 1px solid var(--border); }
+    .appt-table tr:last-child td { border-bottom: none; }
+    .appt-table tr:hover td { background: var(--bg); }
+    .badge-type { display: inline-block; padding: 3px 10px; border-radius: 5px; font-size: 11.5px; font-weight: 600; }
+    .badge-type.followup { background: #e8f5e9; color: #2e7d32; }
+    .badge-type.checkup  { background: #e3f2fd; color: #1565c0; }
+    .badge-type.new      { background: #fef9e7; color: #b7770d; }
+    .empty-state { text-align: center; padding: 40px; color: var(--muted); font-size: 14px; background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); }
+
+    /* ── Reports/Billing ── */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .panel-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; }
+    .panel-card h4 { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .tag-unpaid { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; background: var(--error-bg); color: var(--error); }
+    .tag-paid   { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; background: var(--accent-pale); color: var(--accent); }
+    .report-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .report-item:last-child { border-bottom: none; }
+    .report-icon { width: 32px; height: 32px; border-radius: 7px; background: var(--accent-pale); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .report-icon svg { width: 16px; height: 16px; stroke: var(--accent); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .report-name { flex: 1; font-size: 13.5px; color: var(--text); }
+    .report-link { font-size: 12.5px; color: var(--accent); font-weight: 600; text-decoration: none; }
+    .report-link:hover { text-decoration: underline; }
+
+    /* ── Inbox ── */
+    .msg-item { display: flex; align-items: flex-start; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--border); cursor: pointer; transition: background .15s; border-radius: 6px; }
+    .msg-item:last-child { border-bottom: none; }
+    .msg-item:hover { background: var(--bg); padding-left: 6px; }
+    .msg-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent2); flex-shrink: 0; margin-top: 4px; }
+    .msg-dot.read { background: transparent; border: 1.5px solid var(--border2); }
+    .msg-subject { font-size: 13.5px; font-weight: 500; color: var(--text); }
+    .msg-date { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+    .compose-area { display: flex; flex-direction: column; gap: 10px; }
+    .compose-input { width: 100%; padding: 11px 13px; border: 1.5px solid var(--border); border-radius: 9px; font-family: 'DM Sans', sans-serif; font-size: 13.5px; color: var(--text); background: var(--bg); outline: none; transition: border-color .16s; }
+    .compose-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(45,106,79,0.08); background: var(--surface); }
+    .compose-textarea { min-height: 110px; resize: vertical; }
+    .btn-send { padding: 10px 22px; background: var(--accent); color: #fff; border: none; border-radius: 9px; font-family: 'DM Sans', sans-serif; font-size: 13.5px; font-weight: 600; cursor: pointer; transition: all .16s; }
+    .btn-send:hover { background: var(--panel2); }
+    .btn-delete-msg { padding: 10px 16px; background: var(--error-bg); color: var(--error); border: 1px solid var(--error-border); border-radius: 9px; font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; transition: all .16s; }
+    .btn-delete-msg:hover { background: #f5c6c4; }
+
+    /* Responsive */
+    @media (max-width: 960px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-left: 0; }
+      .stat-grid { grid-template-columns: 1fr 1fr; }
+      .form-grid { grid-template-columns: 1fr; }
+      .field.span-2 { grid-column: span 1; }
+      .two-col { grid-template-columns: 1fr; }
+    }
+
+    /* Print */
+    @media print {
+      .sidebar, .topbar, .profile-tabs, .form-actions,
+      .main { margin-left: 0; }
+      .content { padding: 0; }
+      body { background: white; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="page-loader" id="loader">
+  <div class="loader-mark">
+    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+  </div>
+</div>
+
+
+<!-- Confirm Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h3 id="modal-title">Are you sure?</h3>
+    <p id="modal-body">This action cannot be undone.</p>
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="closeModal()">Cancel</button>
+      <button class="modal-confirm" id="modal-confirm-btn">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<div class="shell">
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-logo">
+      <div class="sb-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      </div>
+      <span>Patient Portal</span>
+    </div>
+
+    <div class="sb-patient">
+      <div class="sb-avatar">{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}</div>
+      <div class="sb-name">{{ user.get_full_name|default:user.username }}</div>
+      <div class="sb-id">Patient ID: #{{ user.id }}</div>
+    </div>
+
+    <nav class="sb-nav">
+      <div class="nav-section">My Profile</div>
+      <button class="nav-item active" onclick="showTab('view-profile', this)">
+        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        View Profile
+      </button>
+      <button class="nav-item" onclick="showTab('update-profile', this)">
+        <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Update Profile
+      </button>
+      <div class="nav-section">Healthcare</div>
+      <button class="nav-item" onclick="showTab('appointments', this)">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        Appointments
+      </button>
+      <button class="nav-item" onclick="showTab('reports', this)">
+        <svg viewBox="0 0 24 24"><path d="M9 12h6M9 16h6M9 8h6M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></svg>
+        Reports
+      </button>
+      <button class="nav-item" onclick="showTab('billing', this)">
+        <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg>
+        Billing
+      </button>
+      <div class="nav-section">Communication</div>
+      <button class="nav-item" onclick="showTab('inbox', this)">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Message Inbox
+        {% if unread_count %}<span class="nav-badge">{{ unread_count }}</span>{% endif %}
+      </button>
+    </nav>
+
+    <div class="sb-bottom">
+      <div class="sb-actions">
+        <button class="sb-action-btn" onclick="toggleTheme()">
+          <svg id="theme-icon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          Theme
+        </button>
+        <form method="POST" action="{% url 'logout' %}" style="flex:1;">
+          {% csrf_token %}
+          <button type="submit" class="sb-action-btn" style="width:100%;">
+            <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+            Log out
+          </button>
+        </form>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <h2 id="page-title">Patient Profile</h2>
+        <p>Welcome back, {{ user.get_full_name|default:user.username }}</p>
+      </div>
+      <div class="topbar-right">
+        <button class="theme-btn" onclick="toggleTheme()">
+          <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+        <a href="#" class="inbox-btn" onclick="showTab('inbox', null); return false;">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Inbox
+          {% if unread_count %}<span class="badge">{{ unread_count }}</span>{% endif %}
+        </a>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- ══════════════════════════════════ -->
+      <!-- VIEW PROFILE                       -->
+      <!-- ══════════════════════════════════ -->
+      <div class="tab-panel active" id="tab-view-profile">
+        <!-- Stat cards -->
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-card-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
+            <div class="stat-card-num" data-count="{{ future_appointments|length|default:0 }}">0</div>
+            <div class="stat-card-label">Upcoming Appointments</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-icon"><svg viewBox="0 0 24 24"><path d="M9 12h6M9 16h6M9 8h6M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></svg></div>
+            <div class="stat-card-num" data-count="{{ prescriptions|length|default:0 }}">0</div>
+            <div class="stat-card-label">Active Prescriptions</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+            <div class="stat-card-num" data-count="{{ unread_count|default:0 }}">0</div>
+            <div class="stat-card-label">Unread Messages</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-icon"><svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg></div>
+            <div class="stat-card-num" data-count="{{ unpaid_bills|length|default:0 }}">0</div>
+            <div class="stat-card-label">Unpaid Bills</div>
+          </div>
+        </div>
+
+        <div class="profile-tabs">
+          <button class="ptab active" onclick="showPTab('personal', this)">Personal Info</button>
+          <button class="ptab" onclick="showPTab('insurance', this)">Insurance Info</button>
+          <button class="ptab" onclick="showPTab('medical', this)">Medical Info</button>
+        </div>
+
+        <div id="ptab-personal" class="info-card">
+          <h3>Personal Information</h3>
+          <div class="info-grid">
+            <div class="info-row"><span class="info-label">Full Name</span><span class="info-value">{{ user.get_full_name|default:"—" }}</span></div>
+            <div class="info-row"><span class="info-label">Email</span><span class="info-value">{{ user.email|default:"—" }}</span></div>
+            <div class="info-row"><span class="info-label">Password</span><span class="info-value masked">••••••••</span></div>
+            <div class="info-row"><span class="info-label">Date of Birth</span><span class="info-value">{{ patient.date_of_birth|default:"—" }}</span></div>
+            <div class="info-row"><span class="info-label">Gender</span><span class="info-value">{{ patient.gender|default:"—" }}</span></div>
+            <div class="info-row"><span class="info-label">Contact No.</span><span class="info-value">{{ patient.contact_number|default:"—" }}</span></div>
+            <div class="info-row"><span class="info-label">Emergency Contact</span><span class="info-value">{{ patient.emergency_contact|default:"—" }}</span></div>
+            <div class="info-row" style="grid-column:span 2"><span class="info-label">Address</span><span class="info-value">{{ patient.address|default:"—" }}</span></div>
+          </div>
+        </div>
+        <div id="ptab-insurance" class="info-card" style="display:none;">
+          <h3>Insurance Information</h3>
+          <div class="info-grid">
+            <div class="info-row"><span class="info-label">Provider</span><span class="info-value">{{ patient.insurance_name|default:"—" }}</span></div>
+            <div class="info-row"><span class="info-label">Member ID</span><span class="info-value">{{ patient.insurance_member_id|default:"—" }}</span></div>
+            <div class="info-row"><span class="info-label">Group No.</span><span class="info-value">{{ patient.insurance_group|default:"—" }}</span></div>
+            <div class="info-row"><span class="info-label">Coverage Date</span><span class="info-value">{{ patient.insurance_coverage_date|default:"—" }}</span></div>
+            <div class="info-row"><span class="info-label">Contact No.</span><span class="info-value">{{ patient.insurance_contact|default:"—" }}</span></div>
+            <div class="info-row" style="grid-column:span 2"><span class="info-label">Address</span><span class="info-value">{{ patient.insurance_address|default:"—" }}</span></div>
+          </div>
+        </div>
+        <div id="ptab-medical" class="info-card" style="display:none;">
+          <h3>Medical Information</h3>
+          <div class="info-grid">
+            <div class="info-row"><span class="info-label">Previous Clinic</span><span class="info-value">{{ patient.previous_clinic|default:"—" }}</span></div>
+            <div class="info-row"><span class="info-label">Previous Doctor</span><span class="info-value">{{ patient.previous_doctor|default:"—" }}</span></div>
+            <div class="info-row"><span class="info-label">Weight</span><span class="info-value">{{ patient.weight|default:"—" }}</span></div>
+            <div class="info-row"><span class="info-label">Height</span><span class="info-value">{{ patient.height|default:"—" }}</span></div>
+            <div class="info-row"><span class="info-label">Blood Pressure</span><span class="info-value">{{ patient.blood_pressure|default:"—" }}</span></div>
+            <div class="info-row"><span class="info-label">Temperature</span><span class="info-value">{{ patient.temperature|default:"—" }}</span></div>
+            <div class="info-row" style="grid-column:span 2"><span class="info-label">Pre-conditions</span><span class="info-value">{{ patient.preconditions|default:"—" }}</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════ -->
+      <!-- UPDATE PROFILE                     -->
+      <!-- ══════════════════════════════════ -->
+      <div class="tab-panel" id="tab-update-profile">
+        <div class="profile-tabs">
+          <button class="ptab active" onclick="showUTab('upersonal', this)">Personal Info</button>
+          <button class="ptab" onclick="showUTab('uinsurance', this)">Insurance Info</button>
+          <button class="ptab" onclick="showUTab('umedical', this)">Medical Info</button>
+        </div>
+
+        <div id="utab-upersonal" class="update-card">
+          <h3>Update Personal Information</h3>
+          <form method="POST" action="{% url 'update_profile' %}">
+            {% csrf_token %}<input type="hidden" name="update_type" value="personal"/>
+            <div class="form-grid">
+              <div class="field"><div class="field-wrap"><input type="date" name="date_of_birth" placeholder="DOB" value="{{ patient.date_of_birth|default:'' }}"/><label>Date of Birth</label></div></div>
+              <div class="field"><div class="field-wrap"><select name="gender"><option value="">Select</option><option value="male" {% if patient.gender == 'male' %}selected{% endif %}>Male</option><option value="female" {% if patient.gender == 'female' %}selected{% endif %}>Female</option><option value="other" {% if patient.gender == 'other' %}selected{% endif %}>Other</option></select><label>Gender</label></div></div>
+              <div class="field"><div class="field-wrap"><input type="tel" name="contact_number" placeholder="Contact" value="{{ patient.contact_number|default:'' }}"/><label>Contact Number</label></div></div>
+              <div class="field"><div class="field-wrap"><input type="tel" name="emergency_contact" placeholder="Emergency" value="{{ patient.emergency_contact|default:'' }}"/><label>Emergency Contact</label></div></div>
+              <div class="field span-2"><div class="field-wrap"><input type="text" name="address" placeholder="Address" value="{{ patient.address|default:'' }}"/><label>Address</label></div></div>
+              <div class="field"><div class="field-wrap"><input type="password" name="new_password" placeholder="New password"/><label>New Password</label></div></div>
+              <div class="field"><div class="field-wrap"><input type="password" name="confirm_password" placeholder="Confirm"/><label>Confirm Password</label></div></div>
+            </div>
+            <div class="form-actions"><button type="submit" class="btn-save">Save Changes</button><button type="button" class="btn-cancel" onclick="showTab('view-profile', null)">Cancel</button></div>
+          </form>
+        </div>
+
+        <div id="utab-uinsurance" class="update-card" style="display:none;">
+          <h3>Update Insurance Information</h3>
+          <form method="POST" action="{% url 'update_profile' %}">
+            {% csrf_token %}<input type="hidden" name="update_type" value="insurance"/>
+            <div class="form-grid">
+              <div class="field span-2"><div class="field-wrap"><input type="text" name="insurance_name" placeholder="Provider" value="{{ patient.insurance_name|default:'' }}"/><label>Insurance Provider</label></div></div>
+              <div class="field"><div class="field-wrap"><input type="text" name="insurance_member_id" placeholder="Member ID" value="{{ patient.insurance_member_id|default:'' }}"/><label>Member ID</label></div></div>
+              <div class="field"><div class="field-wrap"><input type="text" name="insurance_group" placeholder="Group No." value="{{ patient.insurance_group|default:'' }}"/><label>Group Number</label></div></div>
+              <div class="field"><div class="field-wrap"><input type="date" name="insurance_coverage_date" placeholder="Coverage" value="{{ patient.insurance_coverage_date|default:'' }}"/><label>Coverage Date</label></div></div>
+              <div class="field"><div class="field-wrap"><input type="tel" name="insurance_contact" placeholder="Phone" value="{{ patient.insurance_contact|default:'' }}"/><label>Contact Number</label></div></div>
+              <div class="field span-2"><div class="field-wrap"><input type="text" name="insurance_address" placeholder="Address" value="{{ patient.insurance_address|default:'' }}"/><label>Address</label></div></div>
+            </div>
+            <div class="form-actions"><button type="submit" class="btn-save">Save Changes</button><button type="button" class="btn-cancel" onclick="showTab('view-profile', null)">Cancel</button></div>
+          </form>
+        </div>
+
+        <div id="utab-umedical" class="update-card" style="display:none;">
+          <h3>Update Medical Information</h3>
+          <form method="POST" action="{% url 'update_profile' %}" enctype="multipart/form-data">
+            {% csrf_token %}<input type="hidden" name="update_type" value="medical"/>
+            <div class="form-grid">
+              <div class="field"><div class="field-wrap"><input type="text" name="previous_clinic" placeholder="Clinic" value="{{ patient.previous_clinic|default:'' }}"/><label>Previous Clinic</label></div></div>
+              <div class="field"><div class="field-wrap"><input type="text" name="previous_doctor" placeholder="Doctor" value="{{ patient.previous_doctor|default:'' }}"/><label>Previous Doctor</label></div></div>
+              <div class="field"><div class="field-wrap"><input type="text" name="weight" placeholder="Weight" value="{{ patient.weight|default:'' }}"/><label>Weight (lb)</label></div></div>
+              <div class="field"><div class="field-wrap"><input type="text" name="height" placeholder='Height' value="{{ patient.height|default:'' }}"/><label>Height (ft/in)</label></div></div>
+              <div class="field"><div class="field-wrap"><input type="text" name="blood_pressure" placeholder="BP" value="{{ patient.blood_pressure|default:'' }}"/><label>Blood Pressure</label></div></div>
+              <div class="field"><div class="field-wrap"><input type="text" name="temperature" placeholder="Temp" value="{{ patient.temperature|default:'' }}"/><label>Temperature (°F)</label></div></div>
+              <div class="field span-2"><div class="field-wrap"><textarea name="preconditions" placeholder="Preconditions" rows="2">{{ patient.preconditions|default:'' }}</textarea><label>Pre-conditions</label></div></div>
+              <div class="field span-2"><label style="position:static;font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;display:block;">Attach Documents <span style="font-weight:400;font-size:11px;">(JPEG, PDF, audio)</span></label><input type="file" name="documents" multiple accept=".jpg,.jpeg,.pdf,.mp3,.wav" style="padding:10px 14px;"/></div>
+            </div>
+            <div class="form-actions"><button type="submit" class="btn-save">Save Changes</button><button type="button" class="btn-cancel" onclick="showTab('view-profile', null)">Cancel</button></div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════ -->
+      <!-- APPOINTMENTS                       -->
+      <!-- ══════════════════════════════════ -->
+      <div class="tab-panel" id="tab-appointments">
+        <div class="section-head"><h3>Appointments</h3></div>
+        <div class="section-label">Upcoming Appointments</div>
+        {% if future_appointments %}
+        <div class="table-wrap"><table class="appt-table"><thead><tr><th>Date &amp; Time</th><th>Doctor</th><th>Type</th></tr></thead><tbody>{% for appt in future_appointments %}<tr><td>{{ appt.scheduled_date }} {{ appt.scheduled_time }}</td><td>{{ appt.doctor_name|default:"—" }}</td><td><span class="badge-type {{ appt.type|lower }}">{{ appt.type }}</span></td></tr>{% endfor %}</tbody></table></div>
+        {% else %}<div class="empty-state">No upcoming appointments. Message the receptionist to schedule one.</div>{% endif %}
+
+        <div class="section-label" style="margin-top:28px;">Past Appointments</div>
+        {% if past_appointments %}
+        <div class="table-wrap"><table class="appt-table"><thead><tr><th>Date &amp; Time</th><th>Doctor</th><th>Type</th></tr></thead><tbody>{% for appt in past_appointments %}<tr><td>{{ appt.scheduled_date }} {{ appt.scheduled_time }}</td><td>{{ appt.doctor_name|default:"—" }}</td><td><span class="badge-type {{ appt.type|lower }}">{{ appt.type }}</span></td></tr>{% endfor %}</tbody></table></div>
+        {% else %}<div class="empty-state">No past appointments on record.</div>{% endif %}
+      </div>
+
+      <!-- ══════════════════════════════════ -->
+      <!-- REPORTS                            -->
+      <!-- ══════════════════════════════════ -->
+      <div class="tab-panel" id="tab-reports">
+        <div class="section-head"><h3>Reports</h3><button class="btn-save" onclick="window.print()" style="padding:8px 18px;font-size:13px;">Print</button></div>
+        <div class="two-col">
+          <div class="panel-card"><h4>Doctor's Prescriptions</h4>{% if prescriptions %}{% for rx in prescriptions %}<div class="report-item"><div class="report-icon"><svg viewBox="0 0 24 24"><path d="M9 12h6M9 16h6M9 8h6M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></svg></div><span class="report-name">{{ rx.name }}</span><a href="{{ rx.url }}" class="report-link">Download</a></div>{% endfor %}{% else %}<p style="font-size:13px;color:var(--muted);padding:8px 0">No prescriptions on file.</p>{% endif %}</div>
+          <div class="panel-card"><h4>Lab Test Reports</h4>{% if lab_reports %}{% for lab in lab_reports %}<div class="report-item"><div class="report-icon"><svg viewBox="0 0 24 24"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/></svg></div><span class="report-name">{{ lab.name }}</span><a href="{{ lab.url }}" class="report-link">Download</a></div>{% endfor %}{% else %}<p style="font-size:13px;color:var(--muted);padding:8px 0">No lab reports on file.</p>{% endif %}</div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════ -->
+      <!-- BILLING                            -->
+      <!-- ══════════════════════════════════ -->
+      <div class="tab-panel" id="tab-billing">
+        <div class="section-head"><h3>Billing</h3><button class="btn-save" onclick="window.print()" style="padding:8px 18px;font-size:13px;">Print Bills</button></div>
+        <div class="two-col">
+          <div class="panel-card"><h4>Unpaid Bills <span class="tag-unpaid">Unpaid</span></h4>{% if unpaid_bills %}{% for bill in unpaid_bills %}<div class="report-item"><div class="report-icon"><svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg></div><span class="report-name">{{ bill.name }}</span><a href="{{ bill.url }}" class="report-link">View</a></div>{% endfor %}{% else %}<p style="font-size:13px;color:var(--muted);padding:8px 0">No unpaid bills.</p>{% endif %}</div>
+          <div class="panel-card"><h4>Previous Bills <span class="tag-paid">Paid</span></h4>{% if paid_bills %}{% for bill in paid_bills %}<div class="report-item"><div class="report-icon"><svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg></div><span class="report-name">{{ bill.name }}</span><a href="{{ bill.url }}" class="report-link">View</a></div>{% endfor %}{% else %}<p style="font-size:13px;color:var(--muted);padding:8px 0">No previous bills.</p>{% endif %}</div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════ -->
+      <!-- INBOX                              -->
+      <!-- ══════════════════════════════════ -->
+      <div class="tab-panel" id="tab-inbox">
+        <div class="section-head"><h3>Message Inbox</h3></div>
+        <div class="two-col">
+          <div class="panel-card">
+            <h4>Inbox ({{ messages_inbox|length|default:0 }}) <button class="btn-delete-msg" onclick="confirmDelete()">Delete</button></h4>
+            {% if messages_inbox %}{% for msg in messages_inbox %}
+            <div class="msg-item"><div class="msg-dot {% if msg.read %}read{% endif %}"></div><div><div class="msg-subject">{{ msg.subject }}</div><div class="msg-date">{{ msg.date }}</div></div></div>
+            {% endfor %}{% else %}
+            <p style="font-size:13px;color:var(--muted);padding:10px 0">No messages yet.</p>{% endif %}
+          </div>
+          <div class="panel-card">
+            <h4>Compose Message</h4>
+            <form method="POST" action="{% url 'send_message' %}" class="compose-area">
+              {% csrf_token %}
+              <input type="text" name="recipient" placeholder="To: Receptionist / Care Team" class="compose-input"/>
+              <input type="text" name="subject" placeholder="Subject" class="compose-input"/>
+              <textarea name="body" placeholder="Write your message here..." class="compose-input compose-textarea"></textarea>
+              <button type="submit" class="btn-send">Send Message</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  // Loader
+  window.addEventListener('load', () => setTimeout(() => document.getElementById('loader').classList.add('done'), 600));
+
+  // Theme
+  const saved = localStorage.getItem('theme');
+  if (saved) document.documentElement.setAttribute('data-theme', saved);
+  function toggleTheme() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    localStorage.setItem('theme', isDark ? 'light' : 'dark');
+  }
+
+  // Tab navigation
+  const pageTitles = { 'view-profile':'Patient Profile','update-profile':'Update Profile','appointments':'Appointments','reports':'Reports','billing':'Billing','inbox':'Message Inbox' };
+  function showTab(id, btn) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + id).classList.add('active');
+    if (btn) btn.classList.add('active');
+    document.getElementById('page-title').textContent = pageTitles[id] || 'Dashboard';
+  }
+  function showPTab(id, btn) {
+    document.querySelectorAll('#tab-view-profile [id^="ptab-"]').forEach(p => p.style.display = 'none');
+    document.querySelectorAll('#tab-view-profile .ptab').forEach(b => b.classList.remove('active'));
+    document.getElementById('ptab-' + id).style.display = 'block';
+    btn.classList.add('active');
+  }
+  function showUTab(id, btn) {
+    document.querySelectorAll('#tab-update-profile [id^="utab-"]').forEach(p => p.style.display = 'none');
+    document.querySelectorAll('#tab-update-profile .ptab').forEach(b => b.classList.remove('active'));
+    document.getElementById('utab-' + id).style.display = 'block';
+    btn.classList.add('active');
+  }
+
+  // Animated stat counters
+  function animateCount(el) {
+    const target = parseInt(el.getAttribute('data-count')) || 0;
+    let current = 0;
+    const step = Math.max(1, target / 30);
+    const timer = setInterval(() => {
+      current = Math.min(current + step, target);
+      el.textContent = Math.floor(current);
+      if (current >= target) { el.textContent = target; clearInterval(timer); }
+    }, 40);
+  }
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { animateCount(e.target); observer.unobserve(e.target); } });
+  }, { threshold: 0.5 });
+  document.querySelectorAll('[data-count]').forEach(el => observer.observe(el));
+
+  // Toast
+
+  // Confirm modal
+  function confirmDelete() {
+    const modal = document.getElementById('modal');
+    document.getElementById('modal-title').textContent = 'Delete Message?';
+    document.getElementById('modal-body').textContent = 'Are you sure you want to delete this message? This cannot be undone.';
+    document.getElementById('modal-confirm-btn').onclick = () => { closeModal(); };
+    modal.classList.add('show');
+  }
+  function closeModal() { document.getElementById('modal').classList.remove('show'); }
+  document.getElementById('modal').addEventListener('click', e => { if (e.target === document.getElementById('modal')) closeModal(); });</script>
+</body>
+</html>

@@ -1,0 +1,338 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Patient Portal — Create Account</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f0f4f1; --surface: #ffffff; --panel: #1b2e26; --panel2: #243d33;
+      --accent: #2d6a4f; --accent2: #52b788; --accent-pale: #edf7f1; --accent-pale2: #d8f0e3;
+      --text: #1a2820; --muted: #6b7c72; --border: #d0ddd4; --border2: #b8cebe;
+      --error-bg: #fdf0ef; --error: #c0392b; --error-border: #f0b9b5;
+      --success-bg: #edf7f1; --success: #1e8449; --success-border: #a9dfbf;
+      --shadow: 0 4px 24px rgba(45,106,79,0.08); --shadow2: 0 8px 40px rgba(45,106,79,0.13);
+      --radius: 12px;
+    }
+    [data-theme="dark"] {
+      --bg: #0f1a14; --surface: #1b2e26; --panel: #0f1a14;
+      --accent: #52b788; --accent2: #74c99e; --accent-pale: #1b3326; --accent-pale2: #1f3d2c;
+      --text: #e8f0ea; --muted: #7a9982; --border: #2a3d30; --border2: #344d3a;
+    }
+    html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); transition: background .3s, color .3s; }
+
+    /* Loader */
+    .page-loader { position: fixed; inset: 0; background: var(--panel); display: flex; align-items: center; justify-content: center; z-index: 9999; transition: opacity .5s, visibility .5s; }
+    .page-loader.done { opacity: 0; visibility: hidden; }
+    .loader-mark { width: 44px; height: 44px; border-radius: 11px; background: var(--accent2); display: flex; align-items: center; justify-content: center; animation: pulse 1s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
+
+    /* Toast */
+
+    /* Layout */
+    .page { min-height: 100vh; display: grid; grid-template-columns: 380px 1fr; }
+
+    /* Left */
+    .left { background: var(--panel); padding: 52px 40px; display: flex; flex-direction: column; justify-content: space-between; position: sticky; top: 0; height: 100vh; overflow: hidden; }
+    .left::before { content: ''; position: absolute; width: 460px; height: 460px; border-radius: 50%; background: radial-gradient(circle, rgba(82,183,136,0.13) 0%, transparent 65%); top: -120px; left: -100px; pointer-events: none; }
+    .logo-mark { width: 44px; height: 44px; border-radius: 10px; background: var(--accent2); display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
+    .logo-mark svg { width: 24px; height: 24px; }
+    .brand { position: relative; z-index: 1; }
+    .brand h1 { font-family: 'Lora', serif; font-size: 26px; font-weight: 600; color: #fff; margin-bottom: 10px; }
+    .brand p { font-size: 13.5px; color: rgba(255,255,255,0.5); line-height: 1.65; }
+    .steps { position: relative; z-index: 1; }
+    .steps-label { font-size: 10.5px; font-weight: 600; letter-spacing: 0.13em; text-transform: uppercase; color: var(--accent2); margin-bottom: 18px; }
+    .step { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 20px; }
+    .step-num { width: 28px; height: 28px; border-radius: 50%; background: rgba(82,183,136,0.15); border: 1.5px solid rgba(82,183,136,0.3); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--accent2); flex-shrink: 0; transition: all .3s; }
+    .step-num.active { background: var(--accent2); color: var(--panel); border-color: var(--accent2); }
+    .step-text p { font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.8); }
+    .step-text span { font-size: 11.5px; color: rgba(255,255,255,0.38); }
+    .left-foot { font-size: 11px; color: rgba(255,255,255,0.25); position: relative; z-index: 1; }
+
+    /* Right */
+    .right { display: flex; justify-content: center; padding: 52px 40px; position: relative; }
+    .theme-btn { position: absolute; top: 20px; right: 20px; width: 36px; height: 36px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--surface); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .16s; }
+    .theme-btn:hover { border-color: var(--accent); background: var(--accent-pale); }
+    .theme-btn svg { width: 17px; height: 17px; stroke: var(--muted); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .card { width: 100%; max-width: 500px; animation: slideIn .5s ease both; }
+    @keyframes slideIn { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+
+    /* Tabs */
+    .tabs { display: flex; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 4px; margin-bottom: 30px; box-shadow: var(--shadow); }
+    .tab { flex: 1; padding: 10px; border: none; background: none; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 13.5px; font-weight: 500; color: var(--muted); cursor: pointer; transition: all .2s; }
+    .tab.active { background: var(--panel); color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+
+    /* Head */
+    .head { margin-bottom: 24px; }
+    .head h2 { font-family: 'Lora', serif; font-size: 26px; font-weight: 600; color: var(--text); margin-bottom: 5px; }
+    .head p { font-size: 14px; color: var(--muted); }
+
+    /* Section title */
+    .section-title { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin: 24px 0 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+
+    /* Floating label fields */
+    .field { margin-bottom: 16px; }
+    .field-wrap { position: relative; }
+    .field input[type=text], .field input[type=email], .field input[type=password], .field select {
+      width: 100%; padding: 18px 16px 8px; border: 1.5px solid var(--border); border-radius: var(--radius);
+      background: var(--surface); font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--text);
+      outline: none; transition: border-color .18s, box-shadow .18s; appearance: none;
+    }
+    .field input:focus, .field select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(45,106,79,0.1); }
+    .field label { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 14px; color: var(--muted); pointer-events: none; transition: all .18s; }
+    .field input:focus ~ label, .field input:not(:placeholder-shown) ~ label,
+    .field select:focus ~ label, .field select:valid ~ label { top: 10px; transform: none; font-size: 10.5px; font-weight: 600; color: var(--accent); letter-spacing: 0.06em; text-transform: uppercase; }
+    .field input::placeholder { color: transparent; }
+    .field.has-error input, .field.has-error select { border-color: var(--error); }
+    .field-error { font-size: 12px; color: var(--error); margin-top: 5px; display: none; }
+    .field.has-error .field-error { display: block; }
+
+    /* Grid */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+    /* Password strength */
+    .pw-strength { margin-top: 8px; }
+    .pw-bar { height: 4px; border-radius: 2px; background: var(--border); overflow: hidden; margin-bottom: 5px; }
+    .pw-fill { height: 100%; border-radius: 2px; width: 0%; transition: width .3s, background .3s; }
+    .pw-fill.weak { background: #e05c5c; width: 25%; }
+    .pw-fill.fair { background: #f4a261; width: 50%; }
+    .pw-fill.good { background: #ffd93d; width: 75%; }
+    .pw-fill.strong { background: var(--accent2); width: 100%; }
+    .pw-label { font-size: 11.5px; color: var(--muted); }
+    .pw-label.weak { color: #e05c5c; }
+    .pw-label.fair { color: #f4a261; }
+    .pw-label.good { color: #b45309; }
+    .pw-label.strong { color: var(--accent); }
+    .pw-rules { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .pw-rule { font-size: 11px; padding: 3px 8px; border-radius: 4px; background: var(--bg); border: 1px solid var(--border); color: var(--muted); transition: all .2s; }
+    .pw-rule.met { background: var(--accent-pale); border-color: var(--border2); color: var(--accent); }
+
+    /* Staff section */
+    .staff-section { display: none; }
+    .staff-section.show { display: block; }
+
+    /* Messages */
+    .msgs { margin-bottom: 18px; }
+    .msg { padding: 11px 14px; border-radius: 9px; font-size: 13px; margin-bottom: 7px; }
+    .msg.error { background: var(--error-bg); color: var(--error); border: 1px solid var(--error-border); }
+    .msg.success { background: var(--success-bg); color: var(--success); border: 1px solid var(--success-border); }
+    .errorlist { list-style: none; margin-top: 4px; }
+    .errorlist li { font-size: 12px; color: var(--error); }
+
+    /* Submit */
+    .btn { width: 100%; padding: 14px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; transition: all .2s; margin-top: 8px; position: relative; }
+    .btn:hover { background: var(--panel2); transform: translateY(-1px); box-shadow: var(--shadow2); }
+    .btn .spinner { display: none; width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin .6s linear infinite; margin: 0 auto; }
+    .btn.loading span { display: none; }
+    .btn.loading .spinner { display: block; }
+    @keyframes spin { to{transform:rotate(360deg)} }
+
+    .sep { display: flex; align-items: center; gap: 12px; margin: 22px 0; color: var(--muted); font-size: 13px; }
+    .sep::before, .sep::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .alt { text-align: center; font-size: 14px; color: var(--muted); margin-bottom: 40px; }
+    .alt a { color: var(--accent); font-weight: 600; text-decoration: none; }
+    .alt a:hover { text-decoration: underline; }
+
+    @media (max-width: 780px) {
+      .page { grid-template-columns: 1fr; }
+      .left { display: none; }
+      .right { padding: 32px 20px; }
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="page-loader" id="loader">
+  <div class="loader-mark">
+    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+  </div>
+</div>
+
+<div class="page">
+  <!-- LEFT -->
+  <aside class="left">
+    <div class="brand">
+      <div class="logo-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      </div>
+      <h1>Patient Portal</h1>
+      <p>Create your account to get started with secure, convenient healthcare management.</p>
+    </div>
+    <div class="steps">
+      <div class="steps-label">Getting started</div>
+      <div class="step"><div class="step-num active" id="step1">1</div><div class="step-text"><p>Create your account</p><span>Username, email &amp; password</span></div></div>
+      <div class="step"><div class="step-num" id="step2">2</div><div class="step-text"><p>Admin approval</p><span>Your account will be reviewed</span></div></div>
+      <div class="step"><div class="step-num" id="step3">3</div><div class="step-text"><p>Complete your profile</p><span>Add personal &amp; medical info</span></div></div>
+      <div class="step"><div class="step-num" id="step4">4</div><div class="step-text"><p>Access the portal</p><span>Appointments, records &amp; more</span></div></div>
+    </div>
+    <div class="left-foot">© 2026 Patient Portal · CS 310 Group 4</div>
+  </aside>
+
+  <!-- RIGHT -->
+  <main class="right">
+    <button class="theme-btn" onclick="toggleTheme()">
+      <svg id="theme-icon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+    <div class="card">
+      <div class="tabs">
+        <button class="tab active" id="tab-patient" onclick="switchType('patient')">New Patient</button>
+        <button class="tab" id="tab-staff" onclick="switchType('staff')">New Staff Member</button>
+      </div>
+
+      <div class="head">
+        <h2 id="form-title">Create your account</h2>
+        <p id="form-sub">Fill in your details to register as a new patient.</p>
+      </div>
+
+      <form method="POST" action="{% url 'register' %}" onsubmit="handleSubmit(this)">
+        {% csrf_token %}
+        <input type="hidden" name="account_type" id="account_type" value="patient"/>
+
+        <div class="section-title">Account Credentials</div>
+
+        <div class="field" id="field-username">
+          <div class="field-wrap">
+            <input type="text" id="id_username" name="username" placeholder="Username" required/>
+            <label for="id_username">Username *</label>
+          </div>
+          {{ form.username.errors }}
+        </div>
+
+        <div class="field">
+          <div class="field-wrap">
+            <input type="email" id="id_email" name="email" placeholder="Email" required/>
+            <label for="id_email">Email Address *</label>
+          </div>
+          {{ form.email.errors }}
+        </div>
+
+        <div class="grid-2">
+          <div class="field">
+            <div class="field-wrap">
+              <input type="password" id="id_password1" name="password1" placeholder="Password" required oninput="checkStrength(this.value)"/>
+              <label for="id_password1">Password *</label>
+            </div>
+            {{ form.password1.errors }}
+            <div class="pw-strength">
+              <div class="pw-bar"><div class="pw-fill" id="pw-fill"></div></div>
+              <div class="pw-label" id="pw-label">Enter a password</div>
+              <div class="pw-rules">
+                <div class="pw-rule" id="rule-len">6+ characters</div>
+                <div class="pw-rule" id="rule-upper">Uppercase</div>
+                <div class="pw-rule" id="rule-lower">Lowercase</div>
+                <div class="pw-rule" id="rule-num">Number</div>
+              </div>
+            </div>
+          </div>
+          <div class="field">
+            <div class="field-wrap">
+              <input type="password" id="id_password2" name="password2" placeholder="Confirm Password" required oninput="checkMatch()"/>
+              <label for="id_password2">Confirm Password *</label>
+            </div>
+            {{ form.password2.errors }}
+            <div id="match-msg" style="font-size:12px;margin-top:5px;"></div>
+          </div>
+        </div>
+
+        <!-- Staff section -->
+        <div class="staff-section" id="staff-section">
+          <div class="section-title">Staff Information</div>
+          <div class="field">
+            <div class="field-wrap">
+              <select id="id_position" name="position" required>
+                <option value="" disabled selected></option>
+                <option value="doctor">Doctor</option>
+                <option value="nurse">Nurse</option>
+                <option value="receptionist">Receptionist</option>
+                <option value="billing_staff">Billing Staff</option>
+                <option value="lab_staff">Lab Staff</option>
+                <option value="admin">System Administrator</option>
+              </select>
+              <label for="id_position">Position / Role *</label>
+            </div>
+          </div>
+          <div class="field">
+            <div class="field-wrap">
+              <input type="text" id="id_employee_id" name="employee_id" placeholder="Employee ID"/>
+              <label for="id_employee_id">Employee ID</label>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="btn" id="submit-btn">
+          <span id="btn-text">Create Patient Account</span>
+          <div class="spinner"></div>
+        </button>
+      </form>
+
+      <div class="sep">or</div>
+      <div class="alt">Already have an account? <a href="{% url 'login' %}">Sign in</a></div>
+    </div>
+  </main>
+</div>
+
+<script>
+  window.addEventListener('load', () => setTimeout(() => document.getElementById('loader').classList.add('done'), 500));
+
+  const saved = localStorage.getItem('theme');
+  if (saved) {
+    document.documentElement.setAttribute('data-theme', saved);
+    if (saved === 'light') document.getElementById('theme-icon').innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+  }
+
+  function toggleTheme() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    localStorage.setItem('theme', isDark ? 'light' : 'dark');
+    document.getElementById('theme-icon').innerHTML = isDark
+      ? '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>'
+      : '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+  }
+
+  function switchType(type) {
+    document.getElementById('tab-patient').classList.toggle('active', type === 'patient');
+    document.getElementById('tab-staff').classList.toggle('active', type === 'staff');
+    document.getElementById('staff-section').classList.toggle('show', type === 'staff');
+    document.getElementById('account_type').value = type;
+    document.getElementById('form-title').textContent = type === 'patient' ? 'Create your account' : 'Staff Registration';
+    document.getElementById('form-sub').textContent = type === 'patient' ? 'Fill in your details to register as a new patient.' : 'Register as a new staff member. Admin approval required.';
+    document.getElementById('btn-text').textContent = type === 'patient' ? 'Create Patient Account' : 'Create Staff Account';
+  }
+
+  function checkStrength(val) {
+    const fill = document.getElementById('pw-fill');
+    const label = document.getElementById('pw-label');
+    const hasLen = val.length >= 6;
+    const hasUpper = /[A-Z]/.test(val);
+    const hasLower = /[a-z]/.test(val);
+    const hasNum = /[0-9]/.test(val);
+    document.getElementById('rule-len').classList.toggle('met', hasLen);
+    document.getElementById('rule-upper').classList.toggle('met', hasUpper);
+    document.getElementById('rule-lower').classList.toggle('met', hasLower);
+    document.getElementById('rule-num').classList.toggle('met', hasNum);
+    const score = [hasLen, hasUpper, hasLower, hasNum].filter(Boolean).length;
+    const levels = ['', 'weak', 'fair', 'good', 'strong'];
+    const labels = ['Enter a password', 'Weak', 'Fair', 'Good', 'Strong'];
+    fill.className = 'pw-fill ' + (val ? levels[score] : '');
+    label.className = 'pw-label ' + (val ? levels[score] : '');
+    label.textContent = val ? labels[score] : 'Enter a password';
+  }
+
+  function checkMatch() {
+    const p1 = document.getElementById('id_password1').value;
+    const p2 = document.getElementById('id_password2').value;
+    const msg = document.getElementById('match-msg');
+    if (!p2) { msg.textContent = ''; return; }
+    msg.textContent = p1 === p2 ? '✓ Passwords match' : '✗ Passwords do not match';
+    msg.style.color = p1 === p2 ? 'var(--accent)' : 'var(--error)';
+  }
+
+  function handleSubmit(form) {
+    document.getElementById('submit-btn').classList.add('loading');
+  }
+</script>
+</body>
+</html>
