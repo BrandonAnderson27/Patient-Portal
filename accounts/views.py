@@ -82,10 +82,10 @@ def dashboard_view(request):
         active_prescriptions = []
 
     return render(request, 'accounts/dashboard.html', {
-        'upcoming_appointments': upcoming_appointments,
-        'appointment_history': appointment_history,
-        'active_prescriptions': active_prescriptions,
-        'providers': Provider.objects.all(),  # was missing
+        'future_appointments': patient.get_upcoming_appointments(),   # renamed
+        'past_appointments': patient.get_appointment_history(),       # renamed
+        'prescriptions': active_prescriptions,
+        'providers': Provider.objects.all(),
     })
 
 @login_required
