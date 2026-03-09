@@ -31,6 +31,11 @@
     @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
 
     /* ── Toast ── */
+    .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 1000; display: flex; flex-direction: column; gap: 10px; }
+    .toast { padding: 14px 20px; border-radius: 10px; font-size: 14px; font-weight: 500; color: #fff; background: var(--panel); border-left: 4px solid var(--accent2); box-shadow: var(--shadow2); transform: translateX(120%); transition: transform .3s cubic-bezier(.34,1.56,.64,1); max-width: 320px; }
+    .toast.show { transform: translateX(0); }
+    .toast.error { border-left-color: #e05c5c; }
+    .toast.success { border-left-color: var(--accent2); }
 
     /* ── Confirm Modal ── */
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 500; display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: all .2s; }
@@ -190,6 +195,12 @@
     .btn-delete-msg { padding: 10px 16px; background: var(--error-bg); color: var(--error); border: 1px solid var(--error-border); border-radius: 9px; font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; transition: all .16s; }
     .btn-delete-msg:hover { background: #f5c6c4; }
 
+    /* Flash messages */
+    .flash-msgs { margin-bottom: 20px; }
+    .flash-msg { padding: 11px 14px; border-radius: 9px; font-size: 13px; margin-bottom: 7px; }
+    .flash-msg.error { background: var(--error-bg); color: var(--error); border: 1px solid var(--error-border); }
+    .flash-msg.success { background: var(--success-bg); color: var(--success); border: 1px solid var(--success-border); }
+
     /* Responsive */
     @media (max-width: 960px) {
       .sidebar { transform: translateX(-100%); }
@@ -203,7 +214,7 @@
 
     /* Print */
     @media print {
-      .sidebar, .topbar, .profile-tabs, .form-actions,
+      .sidebar, .topbar, .profile-tabs, .form-actions, .toast-container { display: none !important; }
       .main { margin-left: 0; }
       .content { padding: 0; }
       body { background: white; }
@@ -218,6 +229,7 @@
   </div>
 </div>
 
+<div class="toast-container" id="toasts"></div>
 
 <!-- Confirm Modal -->
 <div class="modal-overlay" id="modal">
@@ -315,6 +327,9 @@
     </header>
 
     <div class="content">
+      {% if messages %}
+      <div class="flash-msgs">{% for message in messages %}<div class="flash-msg {{ message.tags }}">{{ message }}</div>{% endfor %}</div>
+      {% endif %}
 
       <!-- ══════════════════════════════════ -->
       <!-- VIEW PROFILE                       -->
@@ -570,16 +585,27 @@
   document.querySelectorAll('[data-count]').forEach(el => observer.observe(el));
 
   // Toast
+  function showToast(message, type = 'success') {
+    const container = document.getElementById('toasts');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    container.appendChild(toast);
+    setTimeout(() => toast.classList.add('show'), 10);
+    setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3500);
+  }
 
   // Confirm modal
   function confirmDelete() {
     const modal = document.getElementById('modal');
     document.getElementById('modal-title').textContent = 'Delete Message?';
     document.getElementById('modal-body').textContent = 'Are you sure you want to delete this message? This cannot be undone.';
-    document.getElementById('modal-confirm-btn').onclick = () => { closeModal(); };
+    document.getElementById('modal-confirm-btn').onclick = () => { closeModal(); showToast('Message deleted', 'success'); };
     modal.classList.add('show');
   }
   function closeModal() { document.getElementById('modal').classList.remove('show'); }
-  document.getElementById('modal').addEventListener('click', e => { if (e.target === document.getElementById('modal')) closeModal(); });</script>
+  document.getElementById('modal').addEventListener('click', e => { if (e.target === document.getElementById('modal')) closeModal(); });
+
+</script>
 </body>
 </html>

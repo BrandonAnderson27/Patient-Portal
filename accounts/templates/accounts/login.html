@@ -32,6 +32,10 @@
     @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
 
     /* Toast */
+    .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 1000; display: flex; flex-direction: column; gap: 10px; }
+    .toast { padding: 14px 20px; border-radius: 10px; font-size: 14px; font-weight: 500; color: #fff; background: var(--panel); border-left: 4px solid var(--accent2); box-shadow: var(--shadow2); transform: translateX(120%); transition: transform .3s cubic-bezier(.34,1.56,.64,1); max-width: 320px; }
+    .toast.show { transform: translateX(0); }
+    .toast.error { border-left-color: #e05c5c; }
 
     /* Layout */
     .page { min-height: 100vh; display: grid; grid-template-columns: 420px 1fr; }
@@ -62,10 +66,7 @@
     .card { width: 100%; max-width: 440px; animation: slideIn .5s ease both; }
     @keyframes slideIn { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
 
-    /* Tabs */
-    .tabs { display: flex; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 4px; margin-bottom: 32px; box-shadow: var(--shadow); }
-    .tab { flex: 1; padding: 10px; border: none; background: none; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 13.5px; font-weight: 500; color: var(--muted); cursor: pointer; transition: all .2s; }
-    .tab.active { background: var(--panel); color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+
 
     /* Head */
     .head { margin-bottom: 28px; }
@@ -81,8 +82,7 @@
     .field input:focus ~ label, .field input:not(:placeholder-shown) ~ label { top: 10px; transform: none; font-size: 11px; font-weight: 600; color: var(--accent); letter-spacing: 0.05em; text-transform: uppercase; }
     .field input::placeholder { color: transparent; }
 
-    .staff-only { display: none; }
-    .staff-only.show { display: block; }
+
 
     .row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
     .check-label { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); cursor: pointer; }
@@ -124,6 +124,7 @@
   </div>
 </div>
 
+<div class="toast-container" id="toasts"></div>
 
 <div class="page">
   <!-- LEFT -->
@@ -151,19 +152,22 @@
       <svg id="theme-icon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
     </button>
     <div class="card">
-      <div class="tabs">
-        <button class="tab active" id="tab-patient" onclick="switchTab('patient')">Patient Login</button>
-        <button class="tab" id="tab-staff" onclick="switchTab('staff')">Staff Login</button>
+
+      {% if messages %}
+      <div class="msgs">
+        {% for message in messages %}
+        <div class="msg {{ message.tags }}">{{ message }}</div>
+        {% endfor %}
       </div>
+      {% endif %}
 
       <div class="head">
-        <h2 id="form-title">Welcome back</h2>
-        <p id="form-sub">Sign in to access your patient portal.</p>
+        <h2>Welcome back</h2>
+        <p>Sign in to access your patient portal.</p>
       </div>
 
       <form method="POST" action="{% url 'login' %}" id="login-form" onsubmit="handleSubmit(this)">
         {% csrf_token %}
-        <input type="hidden" name="login_type" id="login_type" value="patient"/>
 
         <div class="field">
           <div class="field-wrap">
@@ -179,11 +183,6 @@
           </div>
         </div>
 
-        <div class="field staff-only" id="pos-field">
-          <div class="field-wrap">
-            <input type="text" id="id_position" name="position" placeholder="Position"/>
-            <label for="id_position">Position / Role</label>
-          </div>
         </div>
 
         <div class="row">
@@ -198,7 +197,7 @@
       </form>
 
       <div class="sep">or</div>
-      <div class="alt" id="alt-link">New patient? <a href="{% url 'register' %}">Create a new account</a></div>
+      <div class="alt">New patient? <a href="{% url 'register' %}">Create a new account</a></div>
     </div>
   </main>
 </div>
@@ -221,21 +220,20 @@
       : '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
   }
 
-  function switchTab(type) {
-    document.getElementById('tab-patient').classList.toggle('active', type === 'patient');
-    document.getElementById('tab-staff').classList.toggle('active', type === 'staff');
-    document.getElementById('pos-field').classList.toggle('show', type === 'staff');
-    document.getElementById('login_type').value = type;
-    document.getElementById('form-title').textContent = type === 'patient' ? 'Welcome back' : 'Staff Sign In';
-    document.getElementById('form-sub').textContent = type === 'patient' ? 'Sign in to access your patient portal.' : 'Access the clinical portal with your credentials.';
-    document.getElementById('alt-link').innerHTML = type === 'patient'
-      ? 'New patient? <a href="{% url "register" %}">Create a new account</a>'
-      : 'New staff member? <a href="{% url "register" %}">Create an account</a>';
-  }
 
   function handleSubmit(form) {
     const btn = document.getElementById('submit-btn');
     btn.classList.add('loading');
+  }
+
+  function showToast(message, type = 'success') {
+    const container = document.getElementById('toasts');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    container.appendChild(toast);
+    setTimeout(() => toast.classList.add('show'), 10);
+    setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3500);
   }
 </script>
 </body>

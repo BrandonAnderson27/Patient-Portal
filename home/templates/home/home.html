@@ -86,9 +86,7 @@
     .nav-mark { width: 36px; height: 36px; border-radius: 9px; background: var(--accent); display: flex; align-items: center; justify-content: center; }
     .nav-mark svg { width: 20px; height: 20px; }
     .nav-logo span { font-family: 'Lora', serif; font-size: 17px; font-weight: 600; color: var(--text); }
-    .nav-links { display: flex; align-items: center; gap: 6px; }
-    .nav-link { padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; color: var(--muted); text-decoration: none; transition: all .16s; }
-    .nav-link:hover { color: var(--text); background: var(--accent-pale); }
+
     .nav-right { display: flex; align-items: center; gap: 10px; }
     .btn-ghost { padding: 9px 20px; border: 1.5px solid var(--border2); border-radius: 9px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; color: var(--text); background: none; cursor: pointer; text-decoration: none; transition: all .16s; }
     .btn-ghost:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-pale); }
@@ -100,25 +98,7 @@
     .theme-toggle:hover { border-color: var(--accent); background: var(--accent-pale); }
     .theme-toggle svg { width: 17px; height: 17px; stroke: var(--muted); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
-    /* Hamburger */
-    .hamburger { display: none; width: 36px; height: 36px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--surface); cursor: pointer; flex-direction: column; align-items: center; justify-content: center; gap: 5px; }
-    .hamburger span { display: block; width: 18px; height: 2px; background: var(--text); border-radius: 2px; transition: all .25s; }
-    .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
-    .hamburger.open span:nth-child(2) { opacity: 0; }
-    .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
-    /* Mobile menu */
-    .mobile-menu {
-      position: fixed; top: 68px; left: 0; right: 0; z-index: 99;
-      background: var(--surface); border-bottom: 1px solid var(--border);
-      padding: 20px 24px; display: flex; flex-direction: column; gap: 8px;
-      transform: translateY(-110%); transition: transform .3s cubic-bezier(.4,0,.2,1);
-      box-shadow: var(--shadow2);
-    }
-    .mobile-menu.open { transform: translateY(0); }
-    .mobile-menu a { padding: 12px 16px; border-radius: 9px; font-size: 15px; font-weight: 500; color: var(--text); text-decoration: none; transition: background .16s; }
-    .mobile-menu a:hover { background: var(--accent-pale); color: var(--accent); }
-    .mobile-divider { height: 1px; background: var(--border); margin: 4px 0; }
 
     /* ── Hero ── */
     .hero { min-height: 100vh; display: flex; align-items: center; padding: 68px 48px 0; position: relative; overflow: hidden; }
@@ -212,8 +192,6 @@
     @media (max-width: 1024px) { .features-grid { grid-template-columns: repeat(2,1fr); } }
     @media (max-width: 768px) {
       nav { padding: 0 20px; }
-      .nav-links, .nav-right .btn-ghost, .nav-right .btn-primary { display: none; }
-      .hamburger { display: flex; }
       .hero { padding: 68px 20px 0; }
       .hero-inner { grid-template-columns: 1fr; gap: 40px; }
       .hero h1, .hero-typing { font-size: 36px; }
@@ -229,40 +207,6 @@
 
     /* Print */
     @media print { nav, .hero-right, .cta-section, footer { display: none; } }
-
-    /* About Section */
-    .about-section { padding: 100px 48px; background: var(--bg); }
-    .about-inner { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
-    .about-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .about-card { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 24px; transition: box-shadow .2s; }
-    .about-card:hover { box-shadow: var(--shadow); }
-    .about-card-icon { width: 40px; height: 40px; border-radius: 10px; background: var(--accent-pale); display: flex; align-items: center; justify-content: center; margin-bottom: 12px; }
-    .about-card-icon svg { width: 20px; height: 20px; stroke: var(--accent); }
-    .about-card h4 { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
-    .about-card p { font-size: 13px; color: var(--muted); line-height: 1.6; }
-
-    /* Contact Section */
-    .contact-section { padding: 100px 48px; background: var(--panel); border-top: 1px solid var(--border); }
-    .contact-inner { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; }
-    .contact-info-list { display: flex; flex-direction: column; gap: 20px; }
-    .contact-info-item { display: flex; align-items: flex-start; gap: 14px; }
-    .contact-info-icon { width: 40px; height: 40px; border-radius: 10px; background: var(--accent-pale); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .contact-info-icon svg { width: 18px; height: 18px; stroke: var(--accent); }
-    .contact-info-item strong { font-size: 14px; font-weight: 600; color: var(--text); display: block; margin-bottom: 2px; }
-    .contact-info-item p { font-size: 13px; color: var(--muted); margin: 0; }
-    .contact-form-card { background: var(--bg); border: 1px solid var(--border); border-radius: 18px; padding: 36px; }
-    .contact-form-card h3 { font-family: 'Lora', serif; font-size: 20px; font-weight: 600; color: var(--text); margin-bottom: 24px; }
-    .contact-field { margin-bottom: 16px; }
-    .contact-field label { display: block; font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 6px; }
-    .contact-field input, .contact-field textarea { width: 100%; padding: 10px 14px; border-radius: 9px; border: 1px solid var(--border); background: var(--panel); color: var(--text); font-size: 14px; font-family: inherit; resize: vertical; box-sizing: border-box; transition: border-color .15s; }
-    .contact-field input:focus, .contact-field textarea:focus { outline: none; border-color: var(--accent); }
-    .contact-submit { width: 100%; padding: 12px; border-radius: 9px; border: none; background: var(--accent); color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; transition: opacity .15s; margin-top: 4px; }
-    .contact-submit:hover { opacity: 0.88; }
-
-    @media (max-width: 768px) {
-      .about-inner, .contact-inner { grid-template-columns: 1fr; gap: 40px; }
-      .about-section, .contact-section { padding: 60px 20px; }
-    }
   </style>
 </head>
 <body>
@@ -290,38 +234,17 @@
     <span>Patient Portal</span>
   </a>
 
-  <div class="nav-links">
-    <a href="#hero" class="nav-link">Home</a>
-    <a href="#features" class="nav-link">Features</a>
-    <a href="#about" class="nav-link">About</a>
-    <a href="#contact" class="nav-link">Contact</a>
-  </div>
-
   <div class="nav-right">
     <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">
       <svg id="theme-icon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
     </button>
     <a href="{% url 'login' %}" class="btn-ghost">Sign In</a>
-    <a href="#" class="btn-primary">Get Started</a>
-    <button class="hamburger" id="hamburger" onclick="toggleMenu()">
-      <span></span><span></span><span></span>
-    </button>
+    <a href="{% url 'register' %}" class="btn-primary">Register</a>
   </div>
 </nav>
 
-<!-- Mobile Menu -->
-<div class="mobile-menu" id="mobile-menu">
-  <a href="#hero">Home</a>
-  <a href="#features">Features</a>
-  <a href="#about">About</a>
-  <a href="#contact">Contact</a>
-  <div class="mobile-divider"></div>
-  <a href="{% url 'login' %}">Sign In</a>
-  <a href="#" style="background:var(--accent);color:#fff;text-align:center;">Get Started</a>
-</div>
-
 <!-- HERO -->
-<section class="hero" id="hero">
+<section class="hero">
   <div class="hero-inner">
     <div class="hero-left">
       <div class="hero-badge"><span></span> HIPAA Compliant · Secure Platform</div>
@@ -332,7 +255,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
           Access Portal
         </a>
-        <a href="#" class="cta-sub">Create account →</a>
+        <a href="{% url 'register' %}" class="cta-sub">Create account →</a>
       </div>
       <div class="hero-stats">
         <div class="stat"><span class="stat-num" data-count="24">0</span><span class="stat-label">24/7 Available</span></div>
@@ -414,102 +337,6 @@
 </section>
 
 <!-- CTA -->
-<!-- ABOUT SECTION -->
-<section class="about-section" id="about">
-  <div class="about-inner">
-    <div class="about-text">
-      <div class="section-badge">Who we are</div>
-      <h2 class="section-title">Built for patients.<br>Trusted by clinics.</h2>
-      <p class="section-sub" style="margin-bottom:24px;">Patient Portal was designed to bridge the gap between patients and healthcare providers. We believe managing your health should be simple, transparent, and stress-free.</p>
-      <p style="font-size:15px;color:var(--muted);line-height:1.75;margin-bottom:16px;">Our platform gives patients direct access to their appointments, medical records, lab results, prescriptions, and billing — all in one secure place. For clinics, it reduces administrative overhead and improves communication with patients.</p>
-      <p style="font-size:15px;color:var(--muted);line-height:1.75;">We're a team of developers and healthcare enthusiasts committed to making modern healthcare accessible to everyone.</p>
-    </div>
-    <div class="about-cards">
-      <div class="about-card">
-        <div class="about-card-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        </div>
-        <h4>10,000+ Patients</h4>
-        <p>Trusted by thousands of patients across multiple clinics and healthcare providers.</p>
-      </div>
-      <div class="about-card">
-        <div class="about-card-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-        </div>
-        <h4>HIPAA Compliant</h4>
-        <p>Your health data is protected with industry-standard encryption and security practices.</p>
-      </div>
-      <div class="about-card">
-        <div class="about-card-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        </div>
-        <h4>24/7 Access</h4>
-        <p>View your records, schedule appointments, and message your care team anytime, anywhere.</p>
-      </div>
-      <div class="about-card">
-        <div class="about-card-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-        </div>
-        <h4>Real-Time Updates</h4>
-        <p>Get instant notifications for appointment reminders, lab results, and new messages.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- CONTACT SECTION -->
-<section class="contact-section" id="contact">
-  <div class="contact-inner">
-    <div class="contact-left">
-      <div class="section-badge">Get in touch</div>
-      <h2 class="section-title">We're here<br>to help.</h2>
-      <p class="section-sub" style="margin-bottom:32px;">Have a question about your account, need technical support, or want to learn more about Patient Portal for your clinic? Reach out and we'll get back to you shortly.</p>
-      <div class="contact-info-list">
-        <div class="contact-info-item">
-          <div class="contact-info-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-          </div>
-          <div><strong>Email</strong><p>support@patientportal.com</p></div>
-        </div>
-        <div class="contact-info-item">
-          <div class="contact-info-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.84a16 16 0 0 0 5.25 5.25l1.86-1.86a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-          </div>
-          <div><strong>Phone</strong><p>+1 (800) 555-0199</p></div>
-        </div>
-        <div class="contact-info-item">
-          <div class="contact-info-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          </div>
-          <div><strong>Support Hours</strong><p>Mon–Fri, 8am – 6pm EST</p></div>
-        </div>
-      </div>
-    </div>
-    <div class="contact-right">
-      <div class="contact-form-card">
-        <h3>Send us a message</h3>
-        <div class="contact-field">
-          <label>Your Name</label>
-          <input type="text" placeholder="John Smith" />
-        </div>
-        <div class="contact-field">
-          <label>Email Address</label>
-          <input type="email" placeholder="john@example.com" />
-        </div>
-        <div class="contact-field">
-          <label>Subject</label>
-          <input type="text" placeholder="How can we help?" />
-        </div>
-        <div class="contact-field">
-          <label>Message</label>
-          <textarea rows="4" placeholder="Tell us more..."></textarea>
-        </div>
-        <button class="contact-submit" onclick="this.textContent='Sent!';this.style.background='var(--accent)';setTimeout(()=>{this.textContent='Send Message';this.style.background='';},2500)">Send Message</button>
-      </div>
-    </div>
-  </div>
-</section>
-
 <section class="cta-section">
   <div class="cta-inner">
     <div class="cta-text">
@@ -518,7 +345,7 @@
     </div>
     <div class="cta-btns">
       <a href="{% url 'login' %}" class="cta-btn-white">Sign In Now</a>
-      <a href="#" class="cta-btn-outline">Create Account</a>
+      <a href="{% url 'register' %}" class="cta-btn-outline">Create Account</a>
     </div>
   </div>
 </section>
@@ -568,13 +395,7 @@
     }
   }
 
-  // Hamburger menu
-  function toggleMenu() {
-    document.getElementById('hamburger').classList.toggle('open');
-    document.getElementById('mobile-menu').classList.toggle('open');
-  }
 
-  // Animated stats
   function animateCount(el) {
     const target = parseInt(el.getAttribute('data-count'));
     const suffix = el.parentElement.querySelector('.stat-label').textContent.includes('bit') ? '-bit' :
@@ -602,6 +423,7 @@
     setTimeout(() => toast.classList.add('show'), 10);
     setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3500);
   }
+
 </script>
 </body>
 </html>
