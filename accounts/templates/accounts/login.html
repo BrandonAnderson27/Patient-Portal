@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html>
 <head>
     <title>Patient Portal - Login</title>
@@ -21,5 +21,246 @@
         {{ form.as_p }}
         <button type="submit">Login</button>
     </form>
+</body>
+</html> -->
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Patient Portal — Sign In</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f0f4f1; --surface: #ffffff; --panel: #1b2e26; --panel2: #243d33;
+      --accent: #2d6a4f; --accent2: #52b788; --accent-pale: #edf7f1; --accent-pale2: #d8f0e3;
+      --text: #1a2820; --muted: #6b7c72; --border: #d0ddd4; --border2: #b8cebe;
+      --error-bg: #fdf0ef; --error: #c0392b; --error-border: #f0b9b5;
+      --success-bg: #edf7f1; --success: #1e8449; --success-border: #a9dfbf;
+      --shadow: 0 4px 24px rgba(45,106,79,0.08); --shadow2: 0 8px 40px rgba(45,106,79,0.13);
+      --radius: 12px;
+    }
+    [data-theme="dark"] {
+      --bg: #0f1a14; --surface: #1b2e26; --panel: #0f1a14;
+      --accent: #52b788; --accent2: #74c99e; --accent-pale: #1b3326; --accent-pale2: #1f3d2c;
+      --text: #e8f0ea; --muted: #7a9982; --border: #2a3d30; --border2: #344d3a;
+    }
+    html, body { height: 100%; font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); transition: background .3s, color .3s; }
+
+    /* Page loader */
+    .page-loader { position: fixed; inset: 0; background: var(--panel); display: flex; align-items: center; justify-content: center; z-index: 9999; transition: opacity .5s, visibility .5s; }
+    .page-loader.done { opacity: 0; visibility: hidden; }
+    .loader-mark { width: 44px; height: 44px; border-radius: 11px; background: var(--accent2); display: flex; align-items: center; justify-content: center; animation: pulse 1s ease-in-out infinite; }
+    .loader-mark svg { width: 24px; height: 24px; }
+    @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
+
+    /* Toast */
+    .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 1000; display: flex; flex-direction: column; gap: 10px; }
+    .toast { padding: 14px 20px; border-radius: 10px; font-size: 14px; font-weight: 500; color: #fff; background: var(--panel); border-left: 4px solid var(--accent2); box-shadow: var(--shadow2); transform: translateX(120%); transition: transform .3s cubic-bezier(.34,1.56,.64,1); max-width: 320px; }
+    .toast.show { transform: translateX(0); }
+    .toast.error { border-left-color: #e05c5c; }
+
+    /* Layout */
+    .page { min-height: 100vh; display: grid; grid-template-columns: 420px 1fr; }
+
+    /* Left panel */
+    .left { background: var(--panel); padding: 52px 44px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; }
+    .left::before { content: ''; position: absolute; width: 480px; height: 480px; border-radius: 50%; background: radial-gradient(circle, rgba(82,183,136,0.13) 0%, transparent 65%); top: -120px; left: -100px; pointer-events: none; }
+    .left::after { content: ''; position: absolute; width: 300px; height: 300px; border-radius: 50%; background: radial-gradient(circle, rgba(82,183,136,0.07) 0%, transparent 65%); bottom: 40px; right: -60px; pointer-events: none; }
+    .brand { position: relative; z-index: 1; }
+    .logo-mark { width: 44px; height: 44px; border-radius: 10px; background: var(--accent2); display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
+    .logo-mark svg { width: 24px; height: 24px; }
+    .brand h1 { font-family: 'Lora', serif; font-size: 27px; font-weight: 600; color: #fff; margin-bottom: 10px; }
+    .brand p { font-size: 14px; color: rgba(255,255,255,0.5); line-height: 1.65; }
+    .features { position: relative; z-index: 1; }
+    .feat-label { font-size: 10.5px; font-weight: 600; letter-spacing: 0.13em; text-transform: uppercase; color: var(--accent2); margin-bottom: 16px; }
+    .feat { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
+    .feat-icon { width: 32px; height: 32px; border-radius: 8px; background: rgba(82,183,136,0.13); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .feat-icon svg { width: 16px; height: 16px; stroke: var(--accent2); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .feat-text p { font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.85); }
+    .feat-text span { font-size: 11.5px; color: rgba(255,255,255,0.38); }
+    .left-foot { font-size: 11px; color: rgba(255,255,255,0.25); position: relative; z-index: 1; }
+
+    /* Right panel */
+    .right { display: flex; align-items: center; justify-content: center; padding: 48px 40px; position: relative; }
+    .theme-btn { position: absolute; top: 20px; right: 20px; width: 36px; height: 36px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--surface); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .16s; }
+    .theme-btn:hover { border-color: var(--accent); background: var(--accent-pale); }
+    .theme-btn svg { width: 17px; height: 17px; stroke: var(--muted); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .card { width: 100%; max-width: 440px; animation: slideIn .5s ease both; }
+    @keyframes slideIn { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+
+
+
+    /* Head */
+    .head { margin-bottom: 28px; }
+    .head h2 { font-family: 'Lora', serif; font-size: 28px; font-weight: 600; color: var(--text); margin-bottom: 5px; }
+    .head p { font-size: 14px; color: var(--muted); }
+
+    /* Floating label fields */
+    .field { margin-bottom: 18px; position: relative; }
+    .field-wrap { position: relative; }
+    .field input { width: 100%; padding: 18px 16px 8px; border: 1.5px solid var(--border); border-radius: var(--radius); background: var(--surface); font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--text); outline: none; transition: border-color .18s, box-shadow .18s; }
+    .field input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(45,106,79,0.1); }
+    .field label { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 14px; color: var(--muted); pointer-events: none; transition: all .18s; }
+    .field input:focus ~ label, .field input:not(:placeholder-shown) ~ label { top: 10px; transform: none; font-size: 11px; font-weight: 600; color: var(--accent); letter-spacing: 0.05em; text-transform: uppercase; }
+    .field input::placeholder { color: transparent; }
+
+
+
+    .row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
+    .check-label { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); cursor: pointer; }
+    .check-label input { accent-color: var(--accent); }
+    .forgot { font-size: 13px; color: var(--accent); text-decoration: none; font-weight: 500; }
+    .forgot:hover { text-decoration: underline; }
+
+    .btn { width: 100%; padding: 14px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; transition: all .2s; position: relative; overflow: hidden; }
+    .btn:hover { background: var(--panel2); transform: translateY(-1px); box-shadow: var(--shadow2); }
+    .btn:active { transform: scale(0.99); }
+    .btn .spinner { display: none; width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin .6s linear infinite; margin: 0 auto; }
+    .btn.loading span { display: none; }
+    .btn.loading .spinner { display: block; }
+    @keyframes spin { to{transform:rotate(360deg)} }
+
+    .sep { display: flex; align-items: center; gap: 12px; margin: 22px 0; color: var(--muted); font-size: 13px; }
+    .sep::before, .sep::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .alt { text-align: center; font-size: 14px; color: var(--muted); }
+    .alt a { color: var(--accent); font-weight: 600; text-decoration: none; }
+    .alt a:hover { text-decoration: underline; }
+
+    /* Error/success messages */
+    .msgs { margin-bottom: 18px; }
+    .msg { padding: 11px 14px; border-radius: 9px; font-size: 13px; margin-bottom: 7px; display: flex; align-items: center; gap: 8px; }
+    .msg.error { background: var(--error-bg); color: var(--error); border: 1px solid var(--error-border); }
+    .msg.success { background: var(--success-bg); color: var(--success); border: 1px solid var(--success-border); }
+
+    @media (max-width: 780px) {
+      .page { grid-template-columns: 1fr; }
+      .left { display: none; }
+      .right { padding: 36px 20px; }
+    }
+  </style>
+</head>
+<body>
+<div class="page-loader" id="loader">
+  <div class="loader-mark">
+    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+  </div>
+</div>
+
+<div class="toast-container" id="toasts"></div>
+
+<div class="page">
+  <!-- LEFT -->
+  <aside class="left">
+    <div class="brand">
+      <div class="logo-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      </div>
+      <h1>Patient Portal</h1>
+      <p>The most convenient and secure way of communicating with the doctors you need.</p>
+    </div>
+    <div class="features">
+      <div class="feat-label">Portal features</div>
+      <div class="feat"><div class="feat-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div><div class="feat-text"><p>Schedule Appointments</p><span>Request &amp; manage your visits</span></div></div>
+      <div class="feat"><div class="feat-icon"><svg viewBox="0 0 24 24"><path d="M9 12h6M9 16h6M9 8h6M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></svg></div><div class="feat-text"><p>View Medical Records</p><span>Prescriptions, labs &amp; history</span></div></div>
+      <div class="feat"><div class="feat-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><div class="feat-text"><p>Secure Messaging</p><span>Communicate with your care team</span></div></div>
+      <div class="feat"><div class="feat-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div class="feat-text"><p>HIPAA Compliant</p><span>Your data is always protected</span></div></div>
+    </div>
+    <div class="left-foot">© 2026 Patient Portal · CS 310 Group 4</div>
+  </aside>
+
+  <!-- RIGHT -->
+  <main class="right">
+    <button class="theme-btn" onclick="toggleTheme()">
+      <svg id="theme-icon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+    <div class="card">
+
+      {% if messages %}
+      <div class="msgs">
+        {% for message in messages %}
+        <div class="msg {{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <div class="head">
+        <h2>Welcome back</h2>
+        <p>Sign in to access your patient portal.</p>
+      </div>
+
+      <form method="POST" action="{% url 'login' %}" id="login-form" onsubmit="handleSubmit(this)">
+        {% csrf_token %}
+
+        <div class="field">
+          <div class="field-wrap">
+            <input type="text" id="id_username" name="username" placeholder="Username" required autocomplete="username"/>
+            <label for="id_username">Username</label>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-wrap">
+            <input type="password" id="id_password" name="password" placeholder="Password" required autocomplete="current-password"/>
+            <label for="id_password">Password</label>
+          </div>
+        </div>
+
+        </div>
+
+        <div class="row">
+          <label class="check-label"><input type="checkbox" name="remember"/> Remember me</label>
+          <a href="#" class="forgot">Forgot password?</a>
+        </div>
+
+        <button type="submit" class="btn" id="submit-btn">
+          <span>Sign In</span>
+          <div class="spinner"></div>
+        </button>
+      </form>
+
+      <div class="sep">or</div>
+      <div class="alt">New patient? <a href="{% url 'register' %}">Create a new account</a></div>
+    </div>
+  </main>
+</div>
+
+<script>
+  window.addEventListener('load', () => setTimeout(() => document.getElementById('loader').classList.add('done'), 500));
+
+  const saved = localStorage.getItem('theme');
+  if (saved) {
+    document.documentElement.setAttribute('data-theme', saved);
+    if (saved === 'light') document.getElementById('theme-icon').innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+  }
+
+  function toggleTheme() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    localStorage.setItem('theme', isDark ? 'light' : 'dark');
+    document.getElementById('theme-icon').innerHTML = isDark
+      ? '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>'
+      : '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+  }
+
+
+  function handleSubmit(form) {
+    const btn = document.getElementById('submit-btn');
+    btn.classList.add('loading');
+  }
+
+  function showToast(message, type = 'success') {
+    const container = document.getElementById('toasts');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    container.appendChild(toast);
+    setTimeout(() => toast.classList.add('show'), 10);
+    setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3500);
+  }
+</script>
 </body>
 </html>
