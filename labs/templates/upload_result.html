@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>Upload Lab Result</title>
+{% load static %}
+<link rel="stylesheet" href="{% static upload_result.css %}">
+</head>
+
+<body>
+
+<header>
+
+<h2>Lab Result Upload</h2>
+
+<nav>
+<a href="/labs/dashboard/">Back to Dashboard</a>
+<a href="/logout/">Logout</a>
+</nav>
+
+</header>
+
+
+<div class="container">
+
+<h2>Upload Result</h2>
+
+<p><strong>Patient:</strong> {{ request.patient.user.first_name }} {{ request.patient.user.last_name }}</p>
+
+<p><strong>Test:</strong> {{ request.test_name }}</p>
+
+
+<form method="POST">
+
+{% csrf_token %}
+
+<label>Result</label>
+
+<textarea name="result"></textarea>
+
+
+<label>Reference Range</label>
+
+<input type="text" name="reference">
+
+
+<button type="submit">Submit Result</button>
+
+</form>
+
+</div>
+
+</body>
+</html>

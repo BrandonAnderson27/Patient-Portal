@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    {% load static %}
+    <link rel="stylesheet" href="{% static create_request.css %}">
+
+<title>Create Lab Request</title>
+
+
+
+</head>
+
+<body>
+
+<header>
+
+<h2>Patient Portal</h2>
+
+<nav>
+<a href="/portal/">Dashboard</a>
+<a href="/labs/create/">Create Lab Request</a>
+<a href="/logout/">Logout</a>
+</nav>
+
+</header>
+
+
+<div class="container">
+
+<h2>Create Lab Request</h2>
+
+<form method="POST">
+
+{% csrf_token %}
+
+<label>Patient</label>
+
+<select name="patient">
+
+{% for patient in patients %}
+
+{{patients}}
+
+<option value="{{ patient.id }}">
+{{ patient.user.first_name }} {{ patient.user.last_name }}
+</option>
+
+{% endfor %}
+
+</select>
+
+
+<label>Lab</label>
+
+<select name="lab">
+
+{% for lab in labs %}
+
+<option value="{{ lab.id }}">
+{{ lab.name }}
+</option>
+
+{% endfor %}
+
+</select>
+
+
+<label>Test Name</label>
+
+<input type="text" name="test_name">
+
+
+<label>Notes</label>
+
+<textarea name="notes"></textarea>
+
+
+<button type="submit">Create Request</button>
+
+</form>
+
+</div>
+
+</body>
+</html>

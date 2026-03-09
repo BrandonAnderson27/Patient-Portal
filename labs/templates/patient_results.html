@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>My Lab Results</title>
+{% load static %}
+<link rel="stylesheet" href="{% static patient_results.css %}">
+
+
+</head>
+
+<body>
+
+<header>
+
+<h2>Patient Portal</h2>
+
+<nav>
+<a href="/portal/">Dashboard</a>
+<a href="/labs/results/">Lab Results</a>
+<a href="/logout/">Logout</a>
+</nav>
+
+</header>
+
+
+<div class="container">
+
+<h2>My Lab Results</h2>
+
+<table>
+
+<tr>
+<th>Test</th>
+<th>Result</th>
+<th>Date</th>
+</tr>
+
+{% for result in results %}
+
+<tr>
+
+<td>
+{{ result.request.test_name }}
+</td>
+
+<td>
+{{ result.result }}
+</td>
+
+<td>
+{{ result.created_at }}
+</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+</div>
+
+</body>
+</html>

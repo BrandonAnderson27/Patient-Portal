@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>Lab Dashboard</title>
+{% load static %}
+<link rel="stylesheet" href="{% static lab_dashboard.css %}">
+
+
+</head>
+
+<body>
+
+<header>
+
+<h2>Lab Staff Dashboard</h2>
+
+<nav>
+<a href="/labs/dashboard/">Lab Requests</a>
+<a href="/logout/">Logout</a>
+</nav>
+
+</header>
+
+
+<div class="container">
+
+<h2>Lab Requests</h2>
+
+<table>
+
+<tr>
+<th>Patient</th>
+<th>Test</th>
+<th>Status</th>
+<th>Action</th>
+</tr>
+
+{% for request in requests %}
+
+<tr>
+
+<td>
+{{ request.patient.user.first_name }}
+{{ request.patient.user.last_name }}
+</td>
+
+<td>
+{{ request.test_name }}
+</td>
+
+<td>
+
+{% if request.status == "PENDING" %}
+<span class="pending">Pending</span>
+{% else %}
+<span class="completed">Completed</span>
+{% endif %}
+
+</td>
+
+<td>
+
+{% if request.status == "PENDING" %}
+
+<a href="/labs/upload/{{ request.id }}/">
+Upload Result
+</a>
+
+{% else %}
+
+Completed
+
+{% endif %}
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+</div>
+
+</body>
+</html>
