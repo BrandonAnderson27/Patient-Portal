@@ -1,144 +1,548 @@
+{% load static %}
 <!DOCTYPE html>
-<html>
+<html lang="en" data-theme="light">
 <head>
-    <title>Provider Dashboard - Patient Portal</title>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: Arial, sans-serif; background-color: #f0f4f8; }
-        .navbar {
-            background-color: #2c3e50;
-            color: white;
-            padding: 15px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .navbar h1 { font-size: 1.3rem; }
-        .navbar a {
-            color: white;
-            text-decoration: none;
-            background-color: #e74c3c;
-            padding: 8px 16px;
-            border-radius: 5px;
-        }
-        .welcome { text-align: center; padding: 30px; color: #2c3e50; }
-        .cards {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-            padding: 20px 40px;
-            max-width: 1100px;
-            margin: 0 auto;
-        }
-        .card {
-            background-color: white;
-            border-radius: 10px;
-            padding: 25px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        .card h2 {
-            color: #2c3e50;
-            margin-bottom: 15px;
-            font-size: 1.2rem;
-            border-bottom: 2px solid #f0f4f8;
-            padding-bottom: 10px;
-        }
-        .card p { color: #888; font-style: italic; }
-        .card-icon { font-size: 2rem; margin-bottom: 10px; }
-        table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; color: #888; font-size: 0.9rem; }
-        tr { border-top: 1px solid #f0f4f8; }
-        td { padding: 6px 0; }
-        .btn-approve {
-            background-color: #27ae60;
-            color: white;
-            border: none;
-            padding: 5px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            text-decoration: none;
-            font-size: 0.85rem;
-        }
-        .btn-deny {
-            background-color: #e74c3c;
-            color: white;
-            border: none;
-            padding: 5px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            text-decoration: none;
-            font-size: 0.85rem;
-            margin-left: 5px;
-        }
-        .btn-approve:hover { background-color: #219a52; }
-        .btn-deny:hover { background-color: #c0392b; }
-    </style>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Patient Portal — Provider Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f0f4f1; --surface: #ffffff; --panel: #1b2e26; --panel2: #243d33;
+      --accent: #2d6a4f; --accent2: #52b788; --accent-pale: #edf7f1; --accent-pale2: #d8f0e3;
+      --text: #1a2820; --muted: #6b7c72; --border: #d0ddd4; --border2: #b8cebe;
+      --error: #c0392b; --error-bg: #fdf0ef; --error-border: #f0b9b5;
+      --success: #1e8449; --success-bg: #edf7f1; --success-border: #a9dfbf;
+      --warning: #b7770d; --warning-bg: #fef9e7; --warning-border: #f9e4a0;
+      --shadow: 0 4px 24px rgba(45,106,79,0.08); --shadow2: 0 8px 40px rgba(45,106,79,0.13);
+      --sidebar-w: 248px; --radius: 12px;
+    }
+    [data-theme="dark"] {
+      --bg: #0f1a14; --surface: #1b2e26; --panel: #0a1209; --panel2: #162018;
+      --accent: #52b788; --accent2: #74c99e; --accent-pale: #1b3326; --accent-pale2: #1f3d2c;
+      --text: #e8f0ea; --muted: #7a9982; --border: #2a3d30; --border2: #344d3a;
+    }
+    html, body { height: 100%; font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); transition: background .3s, color .3s; }
+
+    /* ── Loader ── */
+    .page-loader { position: fixed; inset: 0; background: var(--panel); display: flex; align-items: center; justify-content: center; z-index: 9999; transition: opacity .5s, visibility .5s; }
+    .page-loader.done { opacity: 0; visibility: hidden; }
+    .loader-mark { width: 44px; height: 44px; border-radius: 11px; background: var(--accent2); display: flex; align-items: center; justify-content: center; animation: pulse 1s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
+
+    /* ── Toast ── */
+    .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 1000; display: flex; flex-direction: column; gap: 10px; }
+    .toast { padding: 14px 20px; border-radius: 10px; font-size: 14px; font-weight: 500; color: #fff; background: var(--panel); border-left: 4px solid var(--accent2); box-shadow: var(--shadow2); transform: translateX(120%); transition: transform .3s cubic-bezier(.34,1.56,.64,1); max-width: 320px; }
+    .toast.show { transform: translateX(0); }
+    .toast.error { border-left-color: #e05c5c; }
+    .toast.success { border-left-color: var(--accent2); }
+
+    /* ── Modal ── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 500; display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: all .2s; }
+    .modal-overlay.show { opacity: 1; visibility: visible; }
+    .modal { background: var(--surface); border-radius: var(--radius); padding: 32px; max-width: 480px; width: 90%; transform: scale(.95); transition: transform .2s; box-shadow: var(--shadow2); }
+    .modal-overlay.show .modal { transform: scale(1); }
+    .modal h3 { font-family: 'Lora', serif; font-size: 20px; font-weight: 600; color: var(--text); margin-bottom: 10px; }
+    .modal p { font-size: 14px; color: var(--muted); line-height: 1.6; margin-bottom: 20px; }
+    .modal-btns { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+    .modal-cancel { padding: 10px 20px; background: var(--bg); border: 1.5px solid var(--border); border-radius: 9px; font-family: 'DM Sans', sans-serif; font-size: 13.5px; cursor: pointer; color: var(--text); }
+    .modal-confirm { padding: 10px 20px; background: var(--accent); border: none; border-radius: 9px; font-family: 'DM Sans', sans-serif; font-size: 13.5px; font-weight: 600; cursor: pointer; color: #fff; }
+    .modal-deny { padding: 10px 20px; background: var(--error); border: none; border-radius: 9px; font-family: 'DM Sans', sans-serif; font-size: 13.5px; font-weight: 600; cursor: pointer; color: #fff; }
+
+    /* ── Shell ── */
+    .shell { display: flex; min-height: 100vh; }
+
+    /* ── Sidebar ── */
+    .sidebar { width: var(--sidebar-w); background: var(--panel); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; overflow: hidden; transition: transform .3s; }
+    .sidebar::before { content: ''; position: absolute; width: 320px; height: 320px; border-radius: 50%; background: radial-gradient(circle, rgba(82,183,136,0.1) 0%, transparent 65%); top: -80px; left: -80px; pointer-events: none; }
+    .sb-logo { padding: 26px 22px 18px; display: flex; align-items: center; gap: 10px; position: relative; z-index: 1; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .sb-mark { width: 34px; height: 34px; border-radius: 8px; background: var(--accent2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .sb-mark svg { width: 18px; height: 18px; }
+    .sb-logo span { font-family: 'Lora', serif; font-size: 15px; font-weight: 600; color: #fff; }
+    .sb-patient { padding: 16px 22px; border-bottom: 1px solid rgba(255,255,255,0.06); position: relative; z-index: 1; }
+    .sb-avatar { width: 40px; height: 40px; border-radius: 50%; background: rgba(82,183,136,0.2); border: 2px solid rgba(82,183,136,0.35); display: flex; align-items: center; justify-content: center; font-family: 'Lora', serif; font-size: 16px; font-weight: 600; color: var(--accent2); margin-bottom: 8px; }
+    .sb-name { font-size: 13.5px; font-weight: 600; color: #fff; }
+    .sb-id { font-size: 11px; color: rgba(255,255,255,0.38); margin-top: 2px; }
+    .sb-nav { flex: 1; padding: 10px 10px; position: relative; z-index: 1; overflow-y: auto; }
+    .nav-section { font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.25); padding: 14px 12px 6px; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 9px; cursor: pointer; font-size: 13.5px; font-weight: 500; color: rgba(255,255,255,0.55); transition: all .18s; border: none; background: none; width: 100%; text-align: left; position: relative; }
+    .nav-item svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; transition: transform .18s; }
+    .nav-item:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.9); }
+    .nav-item:hover svg { transform: translateX(2px); }
+    .nav-item.active { background: rgba(82,183,136,0.18); color: #fff; }
+    .nav-item.active svg { stroke: var(--accent2); }
+    .nav-badge { margin-left: auto; background: var(--accent2); color: var(--panel); font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; }
+    .nav-badge.red { background: #e05c5c; color: #fff; }
+    .sb-bottom { padding: 10px; position: relative; z-index: 1; border-top: 1px solid rgba(255,255,255,0.06); }
+    .sb-actions { display: flex; gap: 6px; padding: 6px 4px; }
+    .sb-action-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 9px; border-radius: 8px; background: none; border: none; font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.4); cursor: pointer; transition: all .16s; }
+    .sb-action-btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .sb-action-btn:hover { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.75); }
+
+    /* ── Main ── */
+    .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; }
+    .topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 32px; height: 62px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+    .topbar-left h2 { font-family: 'Lora', serif; font-size: 19px; font-weight: 600; color: var(--text); }
+    .topbar-left p { font-size: 12px; color: var(--muted); }
+    .topbar-right { display: flex; align-items: center; gap: 10px; }
+    .theme-btn { width: 34px; height: 34px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--bg); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .16s; }
+    .theme-btn:hover { border-color: var(--accent); background: var(--accent-pale); }
+    .theme-btn svg { width: 16px; height: 16px; stroke: var(--muted); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+    /* ── Content ── */
+    .content { padding: 28px 32px; flex: 1; }
+    .tab-panel { display: none; animation: fadeIn .3s ease; }
+    .tab-panel.active { display: block; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+    /* ── Stat cards ── */
+    .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; transition: all .2s; }
+    .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow2); border-color: var(--border2); }
+    .stat-card-icon { width: 38px; height: 38px; border-radius: 9px; background: var(--accent-pale); display: flex; align-items: center; justify-content: center; margin-bottom: 12px; }
+    .stat-card-icon svg { width: 20px; height: 20px; stroke: var(--accent); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .stat-card-icon.warn { background: var(--warning-bg); }
+    .stat-card-icon.warn svg { stroke: var(--warning); }
+    .stat-card-num { font-family: 'Lora', serif; font-size: 28px; font-weight: 600; color: var(--text); }
+    .stat-card-label { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    /* ── Section heads ── */
+    .section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+    .section-head h3 { font-family: 'Lora', serif; font-size: 18px; font-weight: 600; }
+    .section-label { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin: 24px 0 10px; }
+
+    /* ── Tables ── */
+    .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .appt-table { width: 100%; border-collapse: collapse; }
+    .appt-table th { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); text-align: left; padding: 12px 18px; background: var(--bg); border-bottom: 1px solid var(--border); }
+    .appt-table td { padding: 14px 18px; font-size: 13.5px; color: var(--text); border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .appt-table tr:last-child td { border-bottom: none; }
+    .appt-table tr:hover td { background: var(--bg); }
+    .badge-type { display: inline-block; padding: 3px 10px; border-radius: 5px; font-size: 11.5px; font-weight: 600; }
+    .badge-type.pending { background: var(--warning-bg); color: var(--warning); }
+    .badge-type.scheduled { background: var(--success-bg); color: var(--success); }
+    .badge-type.completed { background: var(--accent-pale); color: var(--accent); }
+    .badge-type.cancelled { background: var(--error-bg); color: var(--error); }
+    .empty-state { text-align: center; padding: 40px; color: var(--muted); font-size: 14px; background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); }
+
+    /* ── Action buttons in table ── */
+    .btn-approve { padding: 6px 14px; background: var(--success-bg); color: var(--success); border: 1px solid var(--success-border); border-radius: 7px; font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; text-decoration: none; transition: all .15s; display: inline-block; }
+    .btn-approve:hover { background: var(--accent2); color: #fff; border-color: var(--accent2); }
+    .btn-deny { padding: 6px 14px; background: var(--error-bg); color: var(--error); border: 1px solid var(--error-border); border-radius: 7px; font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; text-decoration: none; transition: all .15s; display: inline-block; margin-left: 6px; }
+    .btn-deny:hover { background: var(--error); color: #fff; }
+    .btn-rx { padding: 6px 14px; background: var(--accent-pale); color: var(--accent); border: 1px solid var(--border2); border-radius: 7px; font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; transition: all .15s; display: inline-block; margin-left: 6px; }
+    .btn-rx:hover { background: var(--accent); color: #fff; }
+
+    /* ── Forms ── */
+    .update-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 26px; }
+    .update-card h3 { font-family: 'Lora', serif; font-size: 17px; font-weight: 600; color: var(--text); margin-bottom: 20px; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .field { position: relative; }
+    .field.span-2 { grid-column: span 2; }
+    .field.span-3 { grid-column: span 3; }
+    .form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+    .field-wrap { position: relative; }
+    .field input[type=text], .field input[type=email], .field input[type=date], .field input[type=number], .field textarea, .field select {
+      width: 100%; padding: 17px 14px 7px; border: 1.5px solid var(--border); border-radius: 10px;
+      background: var(--bg); font-family: 'DM Sans', sans-serif; font-size: 13.5px; color: var(--text);
+      outline: none; transition: border-color .16s, box-shadow .16s; resize: vertical; appearance: none;
+    }
+    .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(45,106,79,0.08); background: var(--surface); }
+    .field label { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 13.5px; color: var(--muted); pointer-events: none; transition: all .16s; }
+    .field textarea ~ label { top: 16px; transform: none; }
+    .field input:focus ~ label, .field input:not(:placeholder-shown) ~ label,
+    .field select:focus ~ label, .field select:valid ~ label,
+    .field textarea:focus ~ label, .field textarea:not(:placeholder-shown) ~ label { top: 7px; transform: none; font-size: 10px; font-weight: 600; color: var(--accent); letter-spacing: 0.06em; text-transform: uppercase; }
+    .field input::placeholder, .field textarea::placeholder { color: transparent; }
+    .form-actions { display: flex; gap: 10px; margin-top: 22px; }
+    .btn-save { padding: 11px 28px; background: var(--accent); color: #fff; border: none; border-radius: 9px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: all .16s; }
+    .btn-save:hover { background: var(--panel2); transform: translateY(-1px); box-shadow: var(--shadow); }
+    .btn-cancel { padding: 11px 22px; background: var(--surface); color: var(--muted); border: 1.5px solid var(--border); border-radius: 9px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all .16s; }
+    .btn-cancel:hover { border-color: var(--text); color: var(--text); }
+
+    /* ── Two col ── */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .panel-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; }
+    .panel-card h4 { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+
+    /* ── Flash messages ── */
+    .flash-msgs { margin-bottom: 20px; }
+    .flash-msg { padding: 11px 14px; border-radius: 9px; font-size: 13px; margin-bottom: 7px; }
+    .flash-msg.error { background: var(--error-bg); color: var(--error); border: 1px solid var(--error-border); }
+    .flash-msg.success { background: var(--success-bg); color: var(--success); border: 1px solid var(--success-border); }
+
+    /* ── Patient pill ── */
+    .patient-pill { display: inline-flex; align-items: center; gap: 6px; background: var(--accent-pale); color: var(--accent); padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+
+    /* Responsive */
+    @media (max-width: 960px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-left: 0; }
+      .stat-grid { grid-template-columns: 1fr 1fr; }
+      .form-grid, .form-grid-3 { grid-template-columns: 1fr; }
+      .field.span-2, .field.span-3 { grid-column: span 1; }
+      .two-col { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
-    <div class="navbar">
-        <h1>Patient Portal — Provider View</h1>
-        <a href="{% url 'logout' %}">Logout</a>
+
+<div class="page-loader" id="loader">
+  <div class="loader-mark">
+    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+  </div>
+</div>
+
+<div class="toast-container" id="toasts"></div>
+
+<!-- Prescription Modal -->
+<div class="modal-overlay" id="rx-modal">
+  <div class="modal" style="max-width:600px;">
+    <h3>Write Prescription</h3>
+    <p id="rx-modal-patient">Patient: —</p>
+    <form method="POST" action="{% url 'add_prescription' %}" id="rx-form">
+      {% csrf_token %}
+      <input type="hidden" name="appointment_id" id="rx-appointment-id"/>
+      <input type="hidden" name="patient_id" id="rx-patient-id"/>
+      <div class="form-grid" style="margin-bottom:0;">
+        <div class="field span-2"><div class="field-wrap"><input type="text" name="medication_name" placeholder="Medication" required/><label>Medication Name</label></div></div>
+        <div class="field"><div class="field-wrap"><input type="text" name="dosage" placeholder="e.g. 500mg" required/><label>Dosage</label></div></div>
+        <div class="field"><div class="field-wrap"><input type="text" name="frequency" placeholder="e.g. Twice daily" required/><label>Frequency</label></div></div>
+        <div class="field"><div class="field-wrap"><input type="text" name="route" placeholder="e.g. Oral"/><label>Route (optional)</label></div></div>
+        <div class="field"><div class="field-wrap"><input type="number" name="refills_allowed" placeholder="0" min="0" value="0"/><label>Refills Allowed</label></div></div>
+        <div class="field"><div class="field-wrap"><input type="date" name="start_date" required/><label>Start Date</label></div></div>
+        <div class="field"><div class="field-wrap"><input type="date" name="end_date"/><label>End Date (optional)</label></div></div>
+        <div class="field span-2"><div class="field-wrap"><textarea name="instructions" placeholder="Instructions" rows="2"></textarea><label>Instructions (optional)</label></div></div>
+      </div>
+      <div class="modal-btns">
+        <button type="button" class="modal-cancel" onclick="closeRxModal()">Cancel</button>
+        <button type="submit" class="modal-confirm">Save Prescription</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="shell">
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-logo">
+      <div class="sb-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      </div>
+      <span>Patient Portal</span>
     </div>
 
-    <div class="welcome">
-        <h2>Welcome, Dr. {{ user.last_name }}</h2>
+    <div class="sb-patient">
+      <div class="sb-avatar">{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}</div>
+      <div class="sb-name">Dr. {{ user.get_full_name|default:user.username }}</div>
+      <div class="sb-id">Provider</div>
     </div>
 
-    <div class="cards">
-        <div class="card" style="grid-column: span 2;">
-            <div class="card-icon">🕐</div>
-            <h2>Pending Appointment Requests</h2>
+    <nav class="sb-nav">
+      <div class="nav-section">Dashboard</div>
+      <button class="nav-item active" onclick="showTab('overview', this)">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Overview
+      </button>
+      <div class="nav-section">Appointments</div>
+      <button class="nav-item" onclick="showTab('pending', this)">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        Pending Requests
+        {% if pending_appointments %}<span class="nav-badge red">{{ pending_appointments|length }}</span>{% endif %}
+      </button>
+      <button class="nav-item" onclick="showTab('upcoming', this)">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        Upcoming
+        {% if upcoming_appointments %}<span class="nav-badge">{{ upcoming_appointments|length }}</span>{% endif %}
+      </button>
+      <div class="nav-section">Tools</div>
+      <button class="nav-item" onclick="showTab('prescribe', this)">
+        <svg viewBox="0 0 24 24"><path d="M9 12h6M9 16h6M9 8h6M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></svg>
+        Write Prescription
+      </button>
+    </nav>
+
+    <div class="sb-bottom">
+      <div class="sb-actions">
+        <button class="sb-action-btn" onclick="toggleTheme()">
+          <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          Theme
+        </button>
+        <form method="POST" action="{% url 'logout' %}" style="flex:1;">
+          {% csrf_token %}
+          <button type="submit" class="sb-action-btn" style="width:100%;">
+            <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+            Log out
+          </button>
+        </form>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <h2 id="page-title">Overview</h2>
+        <p>Welcome back, Dr. {{ user.last_name }}</p>
+      </div>
+      <div class="topbar-right">
+        <button class="theme-btn" onclick="toggleTheme()">
+          <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="content">
+      {% if messages %}
+      <div class="flash-msgs">{% for message in messages %}<div class="flash-msg {{ message.tags }}">{{ message }}</div>{% endfor %}</div>
+      {% endif %}
+
+      <!-- ══════════════════════════════════ -->
+      <!-- OVERVIEW                           -->
+      <!-- ══════════════════════════════════ -->
+      <div class="tab-panel active" id="tab-overview">
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-card-icon warn">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            </div>
+            <div class="stat-card-num" data-count="{{ pending_appointments|length|default:0 }}">0</div>
+            <div class="stat-card-label">Pending Requests</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-icon">
+              <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            </div>
+            <div class="stat-card-num" data-count="{{ upcoming_appointments|length|default:0 }}">0</div>
+            <div class="stat-card-label">Upcoming Appointments</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-icon">
+              <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
+            <div class="stat-card-num" data-count="{{ patient_count|default:0 }}">0</div>
+            <div class="stat-card-label">Total Patients</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-icon">
+              <svg viewBox="0 0 24 24"><path d="M9 12h6M9 16h6M9 8h6M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></svg>
+            </div>
+            <div class="stat-card-num" data-count="{{ prescription_count|default:0 }}">0</div>
+            <div class="stat-card-label">Prescriptions Written</div>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <!-- Pending snapshot -->
+          <div class="panel-card">
+            <h4>Pending Requests</h4>
             {% if pending_appointments %}
-                <table>
-                    <tr>
-                        <th>Patient</th>
-                        <th>Date</th>
-                        <th>Time</th>
-                        <th>Reason</th>
-                        <th>Action</th>
-                    </tr>
-                    {% for appointment in pending_appointments %}
-                    <tr>
-                        <td>{{ appointment.patient }}</td>
-                        <td>{{ appointment.date }}</td>
-                        <td>{{ appointment.time }}</td>
-                        <td>{{ appointment.reason }}</td>
-                        <td>
-                            <a class="btn-approve" href="{% url 'approve_appointment' appointment.id %}">Approve</a>
-                            <a class="btn-deny" href="{% url 'deny_appointment' appointment.id %}">Deny</a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </table>
+              {% for appt in pending_appointments %}
+              <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border);">
+                <div>
+                  <div style="font-size:13.5px; font-weight:500;">{{ appt.patient }}</div>
+                  <div style="font-size:12px; color:var(--muted);">{{ appt.date }} at {{ appt.time }}</div>
+                </div>
+                <div>
+                  <a class="btn-approve" href="{% url 'approve_appointment' appt.id %}">Approve</a>
+                  <a class="btn-deny" href="{% url 'deny_appointment' appt.id %}">Deny</a>
+                </div>
+              </div>
+              {% endfor %}
             {% else %}
-                <p>No pending requests.</p>
+              <p style="font-size:13px;color:var(--muted);padding:10px 0;">No pending requests.</p>
             {% endif %}
-        </div>
+          </div>
 
-        <div class="card" style="grid-column: span 2;">
-            <div class="card-icon">📅</div>
-            <h2>Upcoming Appointments</h2>
+          <!-- Upcoming snapshot -->
+          <div class="panel-card">
+            <h4>Today's Schedule</h4>
             {% if upcoming_appointments %}
-                <table>
-                    <tr>
-                        <th>Patient</th>
-                        <th>Date</th>
-                        <th>Time</th>
-                        <th>Reason</th>
-                    </tr>
-                    {% for appointment in upcoming_appointments %}
-                    <tr>
-                        <td>{{ appointment.patient }}</td>
-                        <td>{{ appointment.date }}</td>
-                        <td>{{ appointment.time }}</td>
-                        <td>{{ appointment.reason }}</td>
-                    </tr>
-                    {% endfor %}
-                </table>
+              {% for appt in upcoming_appointments %}
+              <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border);">
+                <div>
+                  <div style="font-size:13.5px; font-weight:500;">{{ appt.patient }}</div>
+                  <div style="font-size:12px; color:var(--muted);">{{ appt.date }} at {{ appt.time }} — {{ appt.reason|default:"No reason given" }}</div>
+                </div>
+                <span class="badge-type scheduled">Scheduled</span>
+              </div>
+              {% endfor %}
             {% else %}
-                <p>No upcoming appointments.</p>
+              <p style="font-size:13px;color:var(--muted);padding:10px 0;">No upcoming appointments.</p>
             {% endif %}
+          </div>
         </div>
+      </div>
+
+      <!-- ══════════════════════════════════ -->
+      <!-- PENDING REQUESTS                   -->
+      <!-- ══════════════════════════════════ -->
+      <div class="tab-panel" id="tab-pending">
+        <div class="section-head"><h3>Pending Appointment Requests</h3></div>
+        {% if pending_appointments %}
+        <div class="table-wrap">
+          <table class="appt-table">
+            <thead><tr><th>Patient</th><th>Date</th><th>Time</th><th>Reason</th><th>Actions</th></tr></thead>
+            <tbody>
+            {% for appt in pending_appointments %}
+            <tr>
+              <td>{{ appt.patient }}</td>
+              <td>{{ appt.date }}</td>
+              <td>{{ appt.time }}</td>
+              <td>{{ appt.reason|default:"—" }}</td>
+              <td>
+                <a class="btn-approve" href="{% url 'approve_appointment' appt.id %}">Approve</a>
+                <a class="btn-deny" href="{% url 'deny_appointment' appt.id %}">Deny</a>
+              </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="empty-state">No pending appointment requests.</div>
+        {% endif %}
+      </div>
+
+      <!-- ══════════════════════════════════ -->
+      <!-- UPCOMING APPOINTMENTS              -->
+      <!-- ══════════════════════════════════ -->
+      <div class="tab-panel" id="tab-upcoming">
+        <div class="section-head"><h3>Upcoming Appointments</h3></div>
+        {% if upcoming_appointments %}
+        <div class="table-wrap">
+          <table class="appt-table">
+            <thead><tr><th>Patient</th><th>Date</th><th>Time</th><th>Reason</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody>
+            {% for appt in upcoming_appointments %}
+            <tr>
+              <td>{{ appt.patient }}</td>
+              <td>{{ appt.date }}</td>
+              <td>{{ appt.time }}</td>
+              <td>{{ appt.reason|default:"—" }}</td>
+              <td><span class="badge-type {{ appt.status|lower }}">{{ appt.get_status_display }}</span></td>
+              <td>
+                <button class="btn-rx" onclick="openRxModal('{{ appt.id }}', '{{ appt.patient.id }}', '{{ appt.patient }}')">+ Prescribe</button>
+              </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="empty-state">No upcoming appointments.</div>
+        {% endif %}
+      </div>
+
+      <!-- ══════════════════════════════════ -->
+      <!-- WRITE PRESCRIPTION (standalone)    -->
+      <!-- ══════════════════════════════════ -->
+      <div class="tab-panel" id="tab-prescribe">
+        <div class="section-head"><h3>Write Prescription</h3></div>
+        <div class="update-card">
+          <h3>New Prescription</h3>
+          <form method="POST" action="{% url 'add_prescription' %}">
+            {% csrf_token %}
+            <div class="form-grid" style="margin-bottom:16px;">
+              <div class="field span-2">
+                <div class="field-wrap">
+                  <select name="patient_id" required>
+                    <option value="" disabled selected></option>
+                    {% for appt in upcoming_appointments %}
+                      <option value="{{ appt.patient.id }}">{{ appt.patient }}</option>
+                    {% endfor %}
+                  </select>
+                  <label>Select Patient</label>
+                </div>
+              </div>
+              <div class="field span-2"><div class="field-wrap"><input type="text" name="medication_name" placeholder="Medication" required/><label>Medication Name</label></div></div>
+              <div class="field"><div class="field-wrap"><input type="text" name="dosage" placeholder="e.g. 500mg" required/><label>Dosage</label></div></div>
+              <div class="field"><div class="field-wrap"><input type="text" name="frequency" placeholder="e.g. Twice daily" required/><label>Frequency</label></div></div>
+              <div class="field"><div class="field-wrap"><input type="text" name="route" placeholder="e.g. Oral"/><label>Route (optional)</label></div></div>
+              <div class="field"><div class="field-wrap"><input type="number" name="refills_allowed" placeholder="0" min="0" value="0"/><label>Refills Allowed</label></div></div>
+              <div class="field"><div class="field-wrap"><input type="date" name="prescribed_date" required/><label>Prescribed Date</label></div></div>
+              <div class="field"><div class="field-wrap"><input type="date" name="start_date" required/><label>Start Date</label></div></div>
+              <div class="field span-2"><div class="field-wrap"><input type="date" name="end_date"/><label>End Date (optional — leave blank for indefinite)</label></div></div>
+              <div class="field span-2"><div class="field-wrap"><textarea name="instructions" placeholder="Instructions" rows="3"></textarea><label>Instructions (optional)</label></div></div>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn-save">Save Prescription</button>
+              <button type="button" class="btn-cancel" onclick="showTab('overview', null)">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
     </div>
+  </div>
+</div>
+
+<script>
+  // Loader
+  window.addEventListener('load', () => setTimeout(() => document.getElementById('loader').classList.add('done'), 600));
+
+  // Theme
+  const saved = localStorage.getItem('theme');
+  if (saved) document.documentElement.setAttribute('data-theme', saved);
+  function toggleTheme() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    localStorage.setItem('theme', isDark ? 'light' : 'dark');
+  }
+
+  // Tab navigation
+  const pageTitles = { 'overview':'Overview', 'pending':'Pending Requests', 'upcoming':'Upcoming Appointments', 'prescribe':'Write Prescription' };
+  function showTab(id, btn) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + id).classList.add('active');
+    if (btn) btn.classList.add('active');
+    document.getElementById('page-title').textContent = pageTitles[id] || 'Dashboard';
+  }
+
+  // Animated stat counters
+  function animateCount(el) {
+    const target = parseInt(el.getAttribute('data-count')) || 0;
+    let current = 0;
+    const step = Math.max(1, target / 30);
+    const timer = setInterval(() => {
+      current = Math.min(current + step, target);
+      el.textContent = Math.floor(current);
+      if (current >= target) { el.textContent = target; clearInterval(timer); }
+    }, 40);
+  }
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { animateCount(e.target); observer.unobserve(e.target); } });
+  }, { threshold: 0.5 });
+  document.querySelectorAll('[data-count]').forEach(el => observer.observe(el));
+
+  // Prescription modal
+  function openRxModal(appointmentId, patientId, patientName) {
+    document.getElementById('rx-appointment-id').value = appointmentId;
+    document.getElementById('rx-patient-id').value = patientId;
+    document.getElementById('rx-modal-patient').textContent = 'Patient: ' + patientName;
+    document.getElementById('rx-modal').classList.add('show');
+  }
+  function closeRxModal() {
+    document.getElementById('rx-modal').classList.remove('show');
+  }
+  document.getElementById('rx-modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('rx-modal')) closeRxModal();
+  });
+
+  // Toast
+  function showToast(message, type = 'success') {
+    const container = document.getElementById('toasts');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    container.appendChild(toast);
+    setTimeout(() => toast.classList.add('show'), 10);
+    setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3500);
+  }
+</script>
 </body>
 </html>

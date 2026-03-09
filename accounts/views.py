@@ -4,7 +4,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
-from accounts.models import Appointment, User, Patient, AccountApprovalRequest, Provider, ProviderAvailability, Receptionist
+from accounts.models import Appointment, User, Patient, AccountApprovalRequest, Provider, ProviderAvailability, Receptionist, Prescription
 import datetime
 
 def login_view(request):
@@ -203,3 +203,32 @@ def receptionist_dashboard_view(request):
         'upcoming_appointments': upcoming_appointments,
         'provider': provider,
     })
+    
+@login_required
+def add_prescription(request):
+    if request.method == 'POST':
+        provider = Provider.objects.get(user=request.user)
+        patient = Patient.objects.get(id=request.POST['patient_id'])
+        appointment_id = request.POST.get('appointment_id')
+        appointment = Appointment.objects.get(id=appointment_id) if appointment_id else None
+
+        import datetime
+        Prescription.objects.create(
+            patient=patient,
+            provider=provider,
+            appointment=appointment,
+            medication_name=request.POST['medication_name'],
+            dosage=request.POST['dosage'],
+            frequency=request.POST['frequency'],
+            route=request.POST.get('route', ''),
+            instructions=request.POST.get('instructions', ''),
+            prescribed_date=request.POST.get('prescribed_date') or datetime.date.today(),
+            start_date=request.POST['start_date'],
+            end_date=request.POST.get('end_date') or None,
+            refills_allowed=int(request.POST.get('refills_allowed', 0)),
+            refills_remaining=int(request.POST.get('refills_allowed', 0)),
+            status='active',
+        )
+        messages.success(request, 'Prescription saved successfully.')
+        return redirect('provider_dashboard')
+    return redirect('provider_dashboard')
