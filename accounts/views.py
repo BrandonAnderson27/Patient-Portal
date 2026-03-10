@@ -166,13 +166,22 @@ def provider_dashboard_view(request):
             status='scheduled',
             date__gte=datetime.date.today()
         ).order_by('date', 'time')
+        prescription_count = Prescription.objects.filter(provider=provider).count()
+        patient_count = Patient.objects.filter(appointments__provider=provider).distinct().count()
+        patients = Patient.objects.filter(appointments__provider=provider).distinct()
     except Provider.DoesNotExist:
         pending_appointments = []
         upcoming_appointments = []
+        prescription_count = 0
+        patient_count = 0
+        patients = []
 
     return render(request, 'accounts/provider_dashboard.html', {
         'pending_appointments': pending_appointments,
         'upcoming_appointments': upcoming_appointments,
+        'prescription_count': prescription_count,
+        'patient_count': patient_count,
+        'patients': patients,
     })
     
 @login_required

@@ -451,8 +451,8 @@
                 <div class="field-wrap">
                   <select name="patient_id" required>
                     <option value="" disabled selected></option>
-                    {% for appt in upcoming_appointments %}
-                      <option value="{{ appt.patient.id }}">{{ appt.patient }}</option>
+                    {% for patient in patients %}
+                      <option value="{{ patient.id }}">{{ patient }}</option>
                     {% endfor %}
                   </select>
                   <label>Select Patient</label>
