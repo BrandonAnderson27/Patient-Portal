@@ -38,35 +38,45 @@ def logout_view(request):
 
 def register_view(request):
     if request.method == 'POST':
-        username = request.POST['username']
-        if User.objects.filter(username=username).exists():
-            messages.error(request, 'Username already taken.')
-            return render(request, 'accounts/register.html')
-        password = request.POST['password']
-        first_name = request.POST['first_name']
-        last_name = request.POST['last_name']
-        email = request.POST['email']
-        if User.objects.filter(email=email).exists():
-            messages.error(request, 'An account with that email already exists.')
-            return render(request, 'accounts/register.html')
-        phone_number = request.POST['phone_number']
-        date_of_birth = request.POST['date_of_birth']
+        print("POST received:", request.POST)
+        try:
+            username = request.POST['username']
+            if User.objects.filter(username=username).exists():
+                messages.error(request, 'Username already taken.')
+                return render(request, 'accounts/register.html')
+            first_name = request.POST['first_name']
+            last_name = request.POST['last_name']
+            email = request.POST['email']
+            if User.objects.filter(email=email).exists():
+                messages.error(request, 'An account with that email already exists.')
+                return render(request, 'accounts/register.html')
+            password = request.POST['password1']
+            password2 = request.POST['password2']
+            if password != password2:
+                messages.error(request, 'Passwords do not match.')
+                return render(request, 'accounts/register.html')
 
-        user = User.objects.create_user(
-            username=username,
-            password=password,
-            first_name=first_name,
-            last_name=last_name,
-            email=email,
-            phone_number=phone_number,
-            date_of_birth=date_of_birth,
-            role='patient'
-        )
-        patient = Patient.objects.create(user=user, is_approved=False)
-        AccountApprovalRequest.objects.create(patient=patient)
-        messages.success(request, 'Registration submitted! Please wait for admin approval before logging in.')
-        return redirect('login')
-    
+            print("Creating user...")
+            user = User.objects.create_user(
+                username=username,
+                password=password,
+                first_name=first_name,
+                last_name=last_name,
+                email=email,
+                role='patient'
+            )
+            print("User created:", user)
+            patient = Patient.objects.create(user=user, is_approved=False)
+            print("Patient created:", patient)
+            AccountApprovalRequest.objects.create(patient=patient)
+            print("Approval request created")
+            messages.success(request, 'Registration submitted! Please wait for admin approval before logging in.')
+            return redirect('login')
+        except Exception as e:
+            print("ERROR:", e)
+            messages.error(request, f'Registration failed: {e}')
+            return render(request, 'accounts/register.html')
+
     return render(request, 'accounts/register.html')
 
 @login_required
@@ -144,6 +154,8 @@ def approve_appointment(request, appointment_id):
     appointment.status = 'scheduled'
     appointment.save()
     messages.success(request, 'Appointment approved.')
+    if request.user.role == 'receptionist':
+        return redirect('receptionist_dashboard')
     return redirect('provider_dashboard')
 
 def deny_appointment(request, appointment_id):
@@ -151,6 +163,8 @@ def deny_appointment(request, appointment_id):
     appointment.status = 'cancelled'
     appointment.save()
     messages.success(request, 'Appointment denied.')
+    if request.user.role == 'receptionist':
+        return redirect('receptionist_dashboard')
     return redirect('provider_dashboard')
 
 @login_required

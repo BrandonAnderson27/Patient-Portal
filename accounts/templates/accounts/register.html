@@ -262,7 +262,22 @@
             <input type="text" id="id_username" name="username" placeholder="Username" required/>
             <label for="id_username">Username *</label>
           </div>
-          {{ form.username.errors }}
+          
+        </div>
+
+        <div class="grid-2">
+          <div class="field">
+            <div class="field-wrap">
+              <input type="text" id="id_first_name" name="first_name" placeholder="First Name" required/>
+              <label for="id_first_name">First Name *</label>
+            </div>
+          </div>
+          <div class="field">
+            <div class="field-wrap">
+              <input type="text" id="id_last_name" name="last_name" placeholder="Last Name" required/>
+              <label for="id_last_name">Last Name *</label>
+            </div>
+          </div>
         </div>
 
         <div class="field">
@@ -270,7 +285,7 @@
             <input type="email" id="id_email" name="email" placeholder="Email" required/>
             <label for="id_email">Email Address *</label>
           </div>
-          {{ form.email.errors }}
+          
         </div>
 
         <div class="grid-2">
@@ -279,7 +294,7 @@
               <input type="password" id="id_password1" name="password1" placeholder="Password" required oninput="checkStrength(this.value)"/>
               <label for="id_password1">Password *</label>
             </div>
-            {{ form.password1.errors }}
+            
             <div class="pw-strength">
               <div class="pw-bar"><div class="pw-fill" id="pw-fill"></div></div>
               <div class="pw-label" id="pw-label">Enter a password</div>
@@ -296,7 +311,7 @@
               <input type="password" id="id_password2" name="password2" placeholder="Confirm Password" required oninput="checkMatch()"/>
               <label for="id_password2">Confirm Password *</label>
             </div>
-            {{ form.password2.errors }}
+            
             <div id="match-msg" style="font-size:12px;margin-top:5px;"></div>
           </div>
         </div>
@@ -306,7 +321,7 @@
           <div class="section-title">Staff Information</div>
           <div class="field">
             <div class="field-wrap">
-              <select id="id_position" name="position" required>
+              <select id="id_position" name="position">
                 <option value="" disabled selected></option>
                 <option value="doctor">Doctor</option>
                 <option value="nurse">Nurse</option>
@@ -396,7 +411,8 @@
 
   function handleSubmit(form) {
     document.getElementById('submit-btn').classList.add('loading');
-  }
+    return true;
+}
 </script>
 </body>
 </html>
