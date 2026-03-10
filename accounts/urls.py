@@ -13,4 +13,8 @@ urlpatterns = [
     path('available-slots/', views.get_available_slots, name='available_slots'),
     path('receptionist-dashboard/', views.receptionist_dashboard_view, name='receptionist_dashboard'),
     path('prescription/add/', views.add_prescription, name='add_prescription'),
+    path('success-story/submit/', views.submit_success_story, name='submit_success_story'),
+    path('success-story/<int:story_id>/approve/', views.approve_story, name='approve_story'),
+    path('success-story/<int:story_id>/reject/', views.reject_story, name='reject_story'),
+    path('admin-dashboard/', views.admin_dashboard_view, name='admin_dashboard'),
 ]

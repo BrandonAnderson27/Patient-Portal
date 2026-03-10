@@ -1,5 +1,9 @@
 from django.core.management.base import BaseCommand
-from accounts.models import User, Patient, Provider, Appointment, Prescription, ProviderAvailability, Receptionist
+from accounts.models import (
+    User, Patient, Provider, Appointment, Prescription,
+    ProviderAvailability, Receptionist, LabStaff, Admin,
+    AccountApprovalRequest, SuccessStory
+)
 import datetime
 
 class Command(BaseCommand):
@@ -9,18 +13,21 @@ class Command(BaseCommand):
         self.stdout.write('Cleaning up existing test data...')
 
         User.objects.filter(username__in=[
-            'testpatient', 'testprovider', 'testreceptionist'
+            'testpatient', 'testprovider', 'testreceptionist',
+            'testadmin', 'testlabstaff'
         ]).delete()
 
-        # Create patient
-        self.stdout.write('Creating test patient...')
-        patient_user = User.objects.create_user(
-            username='testpatient', password='testpass123',
-            first_name='John', last_name='Doe', role='patient'
+        # ── Admin ─────────────────────────────────────────────
+        self.stdout.write('Creating test admin...')
+        admin_user = User.objects.create_user(
+            username='testadmin', password='testpass123',
+            first_name='Carol', last_name='White', role='admin'
         )
-        patient = Patient.objects.create(user=patient_user, is_approved=True)
+        admin_user.is_staff = True
+        admin_user.save()
+        Admin.objects.create(user=admin_user, admin_level='superadmin')
 
-        # Create provider
+        # ── Provider ──────────────────────────────────────────
         self.stdout.write('Creating test provider...')
         provider_user = User.objects.create_user(
             username='testprovider', password='testpass123',
@@ -32,7 +39,7 @@ class Command(BaseCommand):
             license_number='LIC123456'
         )
 
-        # Create receptionist assigned to provider
+        # ── Receptionist ──────────────────────────────────────
         self.stdout.write('Creating test receptionist...')
         receptionist_user = User.objects.create_user(
             username='testreceptionist', password='testpass123',
@@ -40,7 +47,35 @@ class Command(BaseCommand):
         )
         Receptionist.objects.create(user=receptionist_user, provider=provider)
 
-        # Create provider availability Monday through Friday
+        # ── Lab Staff ─────────────────────────────────────────
+        self.stdout.write('Creating test lab staff...')
+        labstaff_user = User.objects.create_user(
+            username='testlabstaff', password='testpass123',
+            first_name='Mike', last_name='Brown', role='lab_staff'
+        )
+        LabStaff.objects.create(user=labstaff_user, lab='Main Diagnostics Lab')
+
+        # ── Patient ───────────────────────────────────────────
+        self.stdout.write('Creating test patient...')
+        patient_user = User.objects.create_user(
+            username='testpatient', password='testpass123',
+            first_name='John', last_name='Doe', role='patient'
+        )
+        patient = Patient.objects.create(
+            user=patient_user,
+            is_approved=True,
+            address='123 Main St, Springfield',
+            insurance_provider='BlueCross',
+            medical_record='MR-00123'
+        )
+        AccountApprovalRequest.objects.create(
+            patient=patient,
+            status='approved',
+            reviewed_at=datetime.datetime.now(),
+            reviewed_by=admin_user
+        )
+
+        # ── Provider Availability (Mon–Fri) ───────────────────
         self.stdout.write('Creating provider availability...')
         ProviderAvailability.objects.filter(provider=provider).delete()
         for day in range(5):
@@ -52,9 +87,9 @@ class Command(BaseCommand):
                 slot_duration=30
             )
 
-        # Create a pending appointment
-        self.stdout.write('Creating test appointment...')
-        appointment = Appointment.objects.create(
+        # ── Appointments ──────────────────────────────────────
+        self.stdout.write('Creating test appointments...')
+        future_appointment = Appointment.objects.create(
             patient=patient,
             provider=provider,
             date=datetime.date.today() + datetime.timedelta(days=7),
@@ -62,27 +97,77 @@ class Command(BaseCommand):
             reason='Annual checkup',
             status='pending'
         )
+        past_appointment = Appointment.objects.create(
+            patient=patient,
+            provider=provider,
+            date=datetime.date.today() - datetime.timedelta(days=30),
+            time=datetime.time(14, 0),
+            reason='Follow-up visit',
+            status='completed'
+        )
 
-        # Create a prescription
-        self.stdout.write('Creating test prescription...')
+        # ── Prescriptions ─────────────────────────────────────
+        self.stdout.write('Creating test prescriptions...')
         Prescription.objects.create(
             patient=patient,
             provider=provider,
-            appointment=appointment,
+            appointment=past_appointment,
             medication_name='Amoxicillin',
             dosage='500mg',
             frequency='Twice daily',
             route='Oral',
             instructions='Take with food',
-            prescribed_date=datetime.date.today(),
-            start_date=datetime.date.today(),
+            prescribed_date=datetime.date.today() - datetime.timedelta(days=30),
+            start_date=datetime.date.today() - datetime.timedelta(days=30),
             end_date=datetime.date.today() + datetime.timedelta(days=30),
             refills_allowed=2,
             refills_remaining=2,
             status='active'
+        )
+        Prescription.objects.create(
+            patient=patient,
+            provider=provider,
+            appointment=past_appointment,
+            medication_name='Lisinopril',
+            dosage='10mg',
+            frequency='Once daily',
+            route='Oral',
+            instructions='Take in the morning',
+            prescribed_date=datetime.date.today() - datetime.timedelta(days=90),
+            start_date=datetime.date.today() - datetime.timedelta(days=90),
+            end_date=None,  # indefinite
+            refills_allowed=5,
+            refills_remaining=3,
+            status='active'
+        )
+
+        # ── Success Stories ───────────────────────────────────
+        self.stdout.write('Creating test success stories...')
+        SuccessStory.objects.create(
+            patient=patient,
+            content='I came in feeling hopeless, but the team here changed everything. '
+                    'Within weeks I was back on my feet. Cannot recommend this clinic enough!',
+            status='approved',
+            reviewed_by=admin_user,
+            reviewed_at=datetime.datetime.now()
+        )
+        SuccessStory.objects.create(
+            patient=patient,
+            content='The care I received during my recovery was outstanding. '
+                    'Dr. Smith was attentive and thorough at every step.',
+            status='pending'
+        )
+        SuccessStory.objects.create(
+            patient=patient,
+            content='This is a test story that was rejected during review.',
+            status='rejected',
+            reviewed_by=admin_user,
+            reviewed_at=datetime.datetime.now()
         )
 
         self.stdout.write(self.style.SUCCESS('\nDone! Test accounts:'))
         self.stdout.write('  Patient:      testpatient / testpass123')
         self.stdout.write('  Provider:     testprovider / testpass123')
         self.stdout.write('  Receptionist: testreceptionist / testpass123')
+        self.stdout.write('  Lab Staff:    testlabstaff / testpass123')
+        self.stdout.write('  Admin:        testadmin / testpass123')

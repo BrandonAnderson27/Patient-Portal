@@ -178,3 +178,19 @@ class ProviderAvailability(models.Model):
             slots.append(current.time())
             current += datetime.timedelta(minutes=self.slot_duration)
         return slots
+    
+class SuccessStory(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending Approval'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    ]
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='success_stories')
+    content = models.TextField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+    reviewed_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"Story by {self.patient} - {self.status}"

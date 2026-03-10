@@ -4,7 +4,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
-from accounts.models import Appointment, User, Patient, AccountApprovalRequest, Provider, ProviderAvailability, Receptionist, Prescription
+from accounts.models import Appointment, SuccessStory, User, Patient, AccountApprovalRequest, Provider, ProviderAvailability, Receptionist, Prescription
 import datetime
 
 def login_view(request):
@@ -83,19 +83,21 @@ def register_view(request):
 def dashboard_view(request):
     try:
         patient = Patient.objects.get(user=request.user)
-        upcoming_appointments = patient.get_upcoming_appointments()
-        appointment_history = patient.get_appointment_history()
         active_prescriptions = patient.get_active_prescriptions()
     except Patient.DoesNotExist:
-        upcoming_appointments = []
-        appointment_history = []
+        patient = None
         active_prescriptions = []
 
+    approved_stories = SuccessStory.objects.filter(
+        status='approved'
+    ).order_by('-created_at')
+
     return render(request, 'accounts/dashboard.html', {
-        'future_appointments': patient.get_upcoming_appointments(),   # renamed
-        'past_appointments': patient.get_appointment_history(),       # renamed
+        'future_appointments': patient.get_upcoming_appointments() if patient else [],
+        'past_appointments': patient.get_appointment_history() if patient else [],
         'prescriptions': active_prescriptions,
         'providers': Provider.objects.all(),
+        'approved_stories': approved_stories,
     })
 
 @login_required
@@ -255,3 +257,43 @@ def add_prescription(request):
         messages.success(request, 'Prescription saved successfully.')
         return redirect('provider_dashboard')
     return redirect('provider_dashboard')
+
+@login_required
+def submit_success_story(request):
+    if request.method == 'POST':
+        patient = Patient.objects.get(user=request.user)
+        content = request.POST.get('content', '').strip()
+        if content:
+            SuccessStory.objects.create(patient=patient, content=content)
+            messages.success(request, 'Your story has been submitted for review!')
+        return redirect('dashboard')
+    return redirect('dashboard')
+
+@login_required
+def approve_story(request, story_id):
+    from django.utils import timezone
+    story = SuccessStory.objects.get(id=story_id)
+    story.status = 'approved'
+    story.reviewed_by = request.user
+    story.reviewed_at = timezone.now()
+    story.save()
+    messages.success(request, 'Story approved.')
+    return redirect('admin_dashboard')
+
+@login_required
+def reject_story(request, story_id):
+    from django.utils import timezone
+    story = SuccessStory.objects.get(id=story_id)
+    story.status = 'rejected'
+    story.reviewed_by = request.user
+    story.reviewed_at = timezone.now()
+    story.save()
+    messages.success(request, 'Story rejected.')
+    return redirect('admin_dashboard')
+
+@login_required
+def admin_dashboard_view(request):
+    pending_stories = SuccessStory.objects.filter(status='pending').order_by('created_at')
+    return render(request, 'accounts/admin_dashboard.html', {
+        'pending_stories': pending_stories,
+    })
