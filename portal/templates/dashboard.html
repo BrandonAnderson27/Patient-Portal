@@ -5,9 +5,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Patient Portal — Dashboard</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" media="print" onload="this.media='all'"/>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -290,10 +288,6 @@
         Message Inbox
         {% if unread_count %}<span class="nav-badge">{{ unread_count }}</span>{% endif %}
       </button>
-      <button class="nav-item" onclick="showTab('stories', this)">
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        Success Stories
-      </button>
     </nav>
 
     <div class="sb-bottom">
@@ -421,7 +415,7 @@
 
         <div id="utab-upersonal" class="update-card">
           <h3>Update Personal Information</h3>
-          <form method="POST" action="#">
+          <form method="POST" action="{% url 'update_profile' %}">
             {% csrf_token %}<input type="hidden" name="update_type" value="personal"/>
             <div class="form-grid">
               <div class="field"><div class="field-wrap"><input type="date" name="date_of_birth" placeholder="DOB" value="{{ patient.date_of_birth|default:'' }}"/><label>Date of Birth</label></div></div>
@@ -438,7 +432,7 @@
 
         <div id="utab-uinsurance" class="update-card" style="display:none;">
           <h3>Update Insurance Information</h3>
-          <form method="POST" action="#">
+          <form method="POST" action="{% url 'update_profile' %}">
             {% csrf_token %}<input type="hidden" name="update_type" value="insurance"/>
             <div class="form-grid">
               <div class="field span-2"><div class="field-wrap"><input type="text" name="insurance_name" placeholder="Provider" value="{{ patient.insurance_name|default:'' }}"/><label>Insurance Provider</label></div></div>
@@ -454,7 +448,7 @@
 
         <div id="utab-umedical" class="update-card" style="display:none;">
           <h3>Update Medical Information</h3>
-          <form method="POST" action="#" enctype="multipart/form-data">
+          <form method="POST" action="{% url 'update_profile' %}" enctype="multipart/form-data">
             {% csrf_token %}<input type="hidden" name="update_type" value="medical"/>
             <div class="form-grid">
               <div class="field"><div class="field-wrap"><input type="text" name="previous_clinic" placeholder="Clinic" value="{{ patient.previous_clinic|default:'' }}"/><label>Previous Clinic</label></div></div>
@@ -478,114 +472,13 @@
         <div class="section-head"><h3>Appointments</h3></div>
         <div class="section-label">Upcoming Appointments</div>
         {% if future_appointments %}
-        <div class="table-wrap"><table class="appt-table"><thead><tr><th>Date &amp; Time</th><th>Doctor</th><th>Reason</th><th>Status</th></tr></thead><tbody>
-        {% for appt in future_appointments %}
-        <tr>
-          <td>{{ appt.date }} {{ appt.time }}</td>
-          <td>Dr. {{ appt.provider.user.last_name }}</td>
-          <td>{{ appt.reason|default:"—" }}</td>
-          <td><span class="badge-type {{ appt.status|lower }}">{{ appt.get_status_display }}</span></td>
-        </tr>
-        {% endfor %}
-        </tbody></table></div>
-        {% else %}<div class="empty-state">No upcoming appointments.</div>{% endif %}
+        <div class="table-wrap"><table class="appt-table"><thead><tr><th>Date &amp; Time</th><th>Doctor</th><th>Type</th></tr></thead><tbody>{% for appt in future_appointments %}<tr><td>{{ appt.scheduled_date }} {{ appt.scheduled_time }}</td><td>{{ appt.doctor_name|default:"—" }}</td><td><span class="badge-type {{ appt.type|lower }}">{{ appt.type }}</span></td></tr>{% endfor %}</tbody></table></div>
+        {% else %}<div class="empty-state">No upcoming appointments. Message the receptionist to schedule one.</div>{% endif %}
 
         <div class="section-label" style="margin-top:28px;">Past Appointments</div>
         {% if past_appointments %}
-        <div class="table-wrap"><table class="appt-table"><thead><tr><th>Date &amp; Time</th><th>Doctor</th><th>Reason</th><th>Status</th></tr></thead><tbody>
-        {% for appt in past_appointments %}
-        <tr>
-          <td>{{ appt.date }} {{ appt.time }}</td>
-          <td>Dr. {{ appt.provider.user.last_name }}</td>
-          <td>{{ appt.reason|default:"—" }}</td>
-          <td><span class="badge-type {{ appt.status|lower }}">{{ appt.get_status_display }}</span></td>
-        </tr>
-        {% endfor %}
-        </tbody></table></div>
+        <div class="table-wrap"><table class="appt-table"><thead><tr><th>Date &amp; Time</th><th>Doctor</th><th>Type</th></tr></thead><tbody>{% for appt in past_appointments %}<tr><td>{{ appt.scheduled_date }} {{ appt.scheduled_time }}</td><td>{{ appt.doctor_name|default:"—" }}</td><td><span class="badge-type {{ appt.type|lower }}">{{ appt.type }}</span></td></tr>{% endfor %}</tbody></table></div>
         {% else %}<div class="empty-state">No past appointments on record.</div>{% endif %}
-
-        <!-- Request Appointment -->
-        <div class="section-label" style="margin-top:28px;">Request Appointment</div>
-        <div style="display:flex; gap:15px; flex-wrap:wrap; margin-bottom:15px;">
-          <div>
-            <label style="display:block; color:#888; font-size:0.9rem;">Provider</label>
-            <select id="provider-select" style="padding:8px; border-radius:5px; border:1px solid #ddd;">
-              <option value="">-- Select Provider --</option>
-              {% for provider in providers %}
-                <option value="{{ provider.id }}">Dr. {{ provider.user.last_name }} - {{ provider.specialization }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div>
-            <label style="display:block; color:#888; font-size:0.9rem;">Date</label>
-            <input type="date" id="date-select" style="padding:8px; border-radius:5px; border:1px solid #ddd;">
-          </div>
-          <div>
-            <label style="display:block; color:#888; font-size:0.9rem;">Time</label>
-            <select id="time-select" style="padding:8px; border-radius:5px; border:1px solid #ddd;">
-              <option value="">-- Select Date First --</option>
-            </select>
-          </div>
-          <div style="flex:1; min-width:200px;">
-            <label style="display:block; color:#888; font-size:0.9rem;">Reason</label>
-            <input type="text" id="reason-input" placeholder="Reason for visit" style="padding:8px; border-radius:5px; border:1px solid #ddd; width:100%;">
-          </div>
-        </div>
-
-        <button onclick="submitAppointment()" style="background-color:#2c3e50; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer;">
-          Request Appointment
-        </button>
-
-        <script>
-          function fetchSlots() {
-            const providerId = document.getElementById('provider-select').value;
-            const date = document.getElementById('date-select').value;
-            const timeSelect = document.getElementById('time-select');
-
-            if (!providerId || !date) return;
-
-            fetch(`/accounts/available-slots/?provider_id=${providerId}&date=${date}`)
-              .then(res => res.json())
-              .then(data => {
-                timeSelect.innerHTML = '';
-                if (data.slots.length === 0) {
-                  timeSelect.innerHTML = '<option value="">No slots available</option>';
-                } else {
-                  data.slots.forEach(slot => {
-                    timeSelect.innerHTML += `<option value="${slot}">${slot}</option>`;
-                  });
-                }
-              });
-          }
-
-          document.getElementById('provider-select').addEventListener('change', fetchSlots);
-          document.getElementById('date-select').addEventListener('change', fetchSlots);
-
-          function submitAppointment() {
-            const providerId = document.getElementById('provider-select').value;
-            const date = document.getElementById('date-select').value;
-            const time = document.getElementById('time-select').value;
-            const reason = document.getElementById('reason-input').value;
-
-            if (!providerId || !date || !time || !reason) {
-              alert('Please fill out all fields.');
-              return;
-            }
-
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = "{% url 'schedule_appointment' %}";
-            form.innerHTML = `
-              <input name="csrfmiddlewaretoken" value="{{ csrf_token }}">
-              <input name="provider_id" value="${providerId}">
-              <input name="date" value="${date}">
-              <input name="time" value="${time}">
-              <input name="reason" value="${reason}">
-            `;
-            document.body.appendChild(form);
-            form.submit();
-          }
-        </script>
       </div>
 
       <!-- ══════════════════════════════════ -->
@@ -594,53 +487,8 @@
       <div class="tab-panel" id="tab-reports">
         <div class="section-head"><h3>Reports</h3><button class="btn-save" onclick="window.print()" style="padding:8px 18px;font-size:13px;">Print</button></div>
         <div class="two-col">
-
-          <div class="panel-card">
-            <h4>Active Prescriptions</h4>
-            {% if prescriptions %}
-              {% for rx in prescriptions %}
-              <div class="report-item" style="flex-direction:column; align-items:flex-start; gap:4px; padding:12px 0; border-bottom:1px solid var(--border);">
-                <div style="display:flex; justify-content:space-between; width:100%;">
-                  <strong style="font-size:15px;">{{ rx.medication_name }}</strong>
-                  <span class="badge-type {{ rx.status|lower }}" style="font-size:11px;">{{ rx.get_status_display }}</span>
-                </div>
-                <div style="font-size:13px; color:var(--muted);">
-                  <span>{{ rx.dosage }}</span> &bull;
-                  <span>{{ rx.frequency }}</span>
-                  {% if rx.route %} &bull; <span>{{ rx.route }}</span>{% endif %}
-                </div>
-                {% if rx.instructions %}
-                <div style="font-size:12px; color:var(--muted);">{{ rx.instructions }}</div>
-                {% endif %}
-                <div style="font-size:12px; color:var(--muted);">
-                  Prescribed by Dr. {{ rx.provider.user.last_name }} &bull; {{ rx.prescribed_date }}
-                  {% if rx.end_date %} &bull; Expires: {{ rx.end_date }}{% endif %}
-                </div>
-                {% if rx.refills_remaining > 0 %}
-                <div style="font-size:12px; color:var(--muted);">Refills remaining: {{ rx.refills_remaining }}</div>
-                {% endif %}
-              </div>
-              {% endfor %}
-            {% else %}
-              <p style="font-size:13px;color:var(--muted);padding:8px 0">No prescriptions on file.</p>
-            {% endif %}
-          </div>
-
-          <div class="panel-card">
-            <h4>Lab Test Reports</h4>
-            {% if lab_reports %}
-              {% for lab in lab_reports %}
-              <div class="report-item">
-                <div class="report-icon"><svg viewBox="0 0 24 24"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/></svg></div>
-                <span class="report-name">{{ lab.name }}</span>
-                <a href="{{ lab.url }}" class="report-link">Download</a>
-              </div>
-              {% endfor %}
-            {% else %}
-              <p style="font-size:13px;color:var(--muted);padding:8px 0">No lab reports on file.</p>
-            {% endif %}
-          </div>
-
+          <div class="panel-card"><h4>Doctor's Prescriptions</h4>{% if prescriptions %}{% for rx in prescriptions %}<div class="report-item"><div class="report-icon"><svg viewBox="0 0 24 24"><path d="M9 12h6M9 16h6M9 8h6M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></svg></div><span class="report-name">{{ rx.name }}</span><a href="{{ rx.url }}" class="report-link">Download</a></div>{% endfor %}{% else %}<p style="font-size:13px;color:var(--muted);padding:8px 0">No prescriptions on file.</p>{% endif %}</div>
+          <div class="panel-card"><h4>Lab Test Reports</h4>{% if lab_reports %}{% for lab in lab_reports %}<div class="report-item"><div class="report-icon"><svg viewBox="0 0 24 24"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/></svg></div><span class="report-name">{{ lab.name }}</span><a href="{{ lab.url }}" class="report-link">Download</a></div>{% endfor %}{% else %}<p style="font-size:13px;color:var(--muted);padding:8px 0">No lab reports on file.</p>{% endif %}</div>
         </div>
       </div>
 
@@ -670,7 +518,7 @@
           </div>
           <div class="panel-card">
             <h4>Compose Message</h4>
-            <form method="POST" action="#" class="compose-area">
+            <form method="POST" action="{% url 'send_message' %}" class="compose-area">
               {% csrf_token %}
               <input type="text" name="recipient" placeholder="To: Receptionist / Care Team" class="compose-input"/>
               <input type="text" name="subject" placeholder="Subject" class="compose-input"/>
@@ -679,62 +527,6 @@
             </form>
           </div>
         </div>
-      </div>
-
-      <!-- ══════════════════════════════════ -->
-      <!-- SUCCESS STORIES                    -->
-      <!-- ══════════════════════════════════ -->
-      <div class="tab-panel" id="tab-stories">
-        <div class="section-head">
-          <h3>Success Stories</h3>
-          <button class="btn-save" onclick="toggleStoryForm()" style="padding:8px 18px;font-size:13px;">+ Create Post</button>
-        </div>
-
-        <!-- Compose form (hidden by default) -->
-        <div id="story-form" style="display:none; margin-bottom:24px;">
-          <div class="update-card">
-            <h3>Share Your Story</h3>
-            <form method="POST" action="{% url 'submit_success_story' %}">
-              {% csrf_token %}
-              <div style="position:relative; margin-bottom:16px;">
-                <textarea name="content" placeholder="Share your experience..." rows="5"
-                  style="width:100%; padding:14px; border:1.5px solid var(--border); border-radius:10px;
-                  background:var(--bg); font-family:'DM Sans',sans-serif; font-size:14px; color:var(--text);
-                  outline:none; resize:vertical;"
-                  required></textarea>
-              </div>
-              <div class="form-actions">
-                <button type="submit" class="btn-save">Submit for Review</button>
-                <button type="button" class="btn-cancel" onclick="toggleStoryForm()">Cancel</button>
-              </div>
-            </form>
-          </div>
-        </div>
-
-        <!-- Feed -->
-        {% if approved_stories %}
-          {% for story in approved_stories %}
-          <div style="background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
-            padding:22px; margin-bottom:16px;">
-            <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
-              <div style="width:36px; height:36px; border-radius:50%; background:var(--accent-pale);
-                border:2px solid var(--border2); display:flex; align-items:center; justify-content:center;
-                font-family:'Lora',serif; font-size:14px; font-weight:600; color:var(--accent);">
-                {{ story.patient.user.first_name|first|upper }}{{ story.patient.user.last_name|first|upper }}
-              </div>
-              <div>
-                <div style="font-size:13.5px; font-weight:600; color:var(--text);">
-                  {{ story.patient.user.first_name }} {{ story.patient.user.last_name|slice:":1" }}.
-                </div>
-                <div style="font-size:11.5px; color:var(--muted);">{{ story.created_at|date:"F j, Y" }}</div>
-              </div>
-            </div>
-            <p style="font-size:14px; color:var(--text); line-height:1.7;">{{ story.content }}</p>
-          </div>
-          {% endfor %}
-        {% else %}
-          <div class="empty-state">No success stories yet. Be the first to share!</div>
-        {% endif %}
       </div>
 
     </div>
@@ -755,7 +547,7 @@
   }
 
   // Tab navigation
-  const pageTitles = { 'view-profile':'Patient Profile','update-profile':'Update Profile','appointments':'Appointments','reports':'Reports','billing':'Billing','inbox':'Message Inbox','stories':'Success Stories' };
+  const pageTitles = { 'view-profile':'Patient Profile','update-profile':'Update Profile','appointments':'Appointments','reports':'Reports','billing':'Billing','inbox':'Message Inbox' };
   function showTab(id, btn) {
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
@@ -813,11 +605,6 @@
   }
   function closeModal() { document.getElementById('modal').classList.remove('show'); }
   document.getElementById('modal').addEventListener('click', e => { if (e.target === document.getElementById('modal')) closeModal(); });
-
-  function toggleStoryForm() {
-    const form = document.getElementById('story-form');
-    form.style.display = form.style.display === 'none' ? 'block' : 'none';
-  }
 
 </script>
 </body>
