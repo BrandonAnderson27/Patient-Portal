@@ -270,6 +270,11 @@
         Upcoming
         {% if upcoming_appointments %}<span class="nav-badge">{{ upcoming_appointments|length }}</span>{% endif %}
       </button>
+      <div class="nav-section">Labs</div>
+      <button class="nav-item" onclick="showTab('lab-request', this)">
+        <svg viewBox="0 0 24 24"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/></svg>
+        Create Lab Request
+      </button>
       <div class="nav-section">Tools</div>
       <button class="nav-item" onclick="showTab('prescribe', this)">
         <svg viewBox="0 0 24 24"><path d="M9 12h6M9 16h6M9 8h6M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></svg>
@@ -495,6 +500,64 @@
       </div>
 
       <!-- ══════════════════════════════════ -->
+      <!-- CREATE LAB REQUEST                 -->
+      <!-- ══════════════════════════════════ -->
+      <div class="tab-panel" id="tab-lab-request">
+        <div class="section-head"><h3>Create Lab Request</h3></div>
+        <div class="update-card">
+          <h3>New Lab Request</h3>
+          <form method="POST" action="{% url 'create_lab_request' %}">
+            {% csrf_token %}
+            <div class="form-grid" style="margin-bottom:16px;">
+
+              <div class="field span-2">
+                <div class="field-wrap">
+                  <select name="patient" required>
+                    <option value="" disabled selected></option>
+                    {% for patient in patients %}
+                    <option value="{{ patient.id }}">{{ patient }}</option>
+                    {% endfor %}
+                  </select>
+                  <label>Patient</label>
+                </div>
+              </div>
+
+              <div class="field span-2">
+                <div class="field-wrap">
+                  <select name="lab" required>
+                    <option value="" disabled selected></option>
+                    {% for lab in labs %}
+                    <option value="{{ lab.id }}">{{ lab.name }}</option>
+                    {% endfor %}
+                  </select>
+                  <label>Lab</label>
+                </div>
+              </div>
+
+              <div class="field span-2">
+                <div class="field-wrap">
+                  <input type="text" name="test_name" placeholder="Test name" required/>
+                  <label>Test Name</label>
+                </div>
+              </div>
+
+              <div class="field span-2">
+                <div class="field-wrap">
+                  <textarea name="notes" placeholder="Notes" rows="4"></textarea>
+                  <label>Notes (optional)</label>
+                </div>
+              </div>
+
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn-save">Create Request</button>
+              <button type="button" class="btn-cancel" onclick="showTab('overview', null)">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════ -->
       <!-- INBOX                              -->
       <!-- ══════════════════════════════════ -->
       <div class="tab-panel" id="tab-inbox">
@@ -534,7 +597,7 @@
   }
 
   // Tab navigation
-  const pageTitles = { 'overview':'Overview', 'pending':'Pending Requests', 'upcoming':'Upcoming Appointments', 'prescribe':'Write Prescription', 'inbox':'Message Inbox' };
+  const pageTitles = { 'overview':'Overview', 'pending':'Pending Requests', 'upcoming':'Upcoming Appointments', 'prescribe':'Write Prescription', 'inbox':'Message Inbox', 'lab-request':'Create Lab Request' };
   function showTab(id, btn) {
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));

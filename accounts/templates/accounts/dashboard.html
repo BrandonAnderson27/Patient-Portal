@@ -284,6 +284,11 @@
         <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg>
         Billing
       </button>
+      <button class="nav-item" onclick="showTab('lab-results', this)">
+        <svg viewBox="0 0 24 24"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/></svg>
+        Lab Results
+        {% if pending_requests %}<span class="nav-badge">{{ pending_requests|length }}</span>{% endif %}
+      </button>
       <div class="nav-section">Communication</div>
       <button class="nav-item" onclick="showTab('inbox', this)">
         <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
@@ -737,6 +742,65 @@
         {% endif %}
       </div>
 
+      <!-- ══════════════════════════════════ -->
+      <!-- LAB RESULTS                        -->
+      <!-- ══════════════════════════════════ -->
+      <div class="tab-panel" id="tab-lab-results">
+        <div class="section-head"><h3>Lab Results</h3></div>
+
+        <!-- Pending Lab Requests -->
+        <div class="section-label">Pending Requests</div>
+        {% if pending_requests %}
+        <div class="table-wrap" style="margin-bottom: 28px;">
+          <table class="appt-table">
+            <thead>
+              <tr>
+                <th>Test Name</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for req in pending_requests %}
+              <tr>
+                <td>{{ req.test_name }}</td>
+                <td><span class="badge-type pending">Pending</span></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="empty-state" style="margin-bottom: 28px;">No pending lab requests.</div>
+        {% endif %}
+
+        <!-- Completed Results -->
+        <div class="section-label">Completed Results</div>
+        {% if completed_results %}
+        <div class="table-wrap">
+          <table class="appt-table">
+            <thead>
+              <tr>
+                <th>Test Name</th>
+                <th>Result</th>
+                <th>Reference Range</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for res in completed_results %}
+              <tr>
+                <td>{{ res.request.test_name }}</td>
+                <td>{{ res.result }}</td>
+                <td>{{ res.reference_range }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="empty-state">No completed results yet.</div>
+        {% endif %}
+      </div>
+
     </div>
   </div>
 </div>
@@ -755,7 +819,7 @@
   }
 
   // Tab navigation
-  const pageTitles = { 'view-profile':'Patient Profile','update-profile':'Update Profile','appointments':'Appointments','reports':'Reports','billing':'Billing','inbox':'Message Inbox','stories':'Success Stories' };
+  const pageTitles = { 'view-profile':'Patient Profile','update-profile':'Update Profile','appointments':'Appointments','reports':'Reports','billing':'Billing','inbox':'Message Inbox','stories':'Success Stories','lab-results':'Lab Results' };
   function showTab(id, btn) {
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));

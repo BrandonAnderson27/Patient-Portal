@@ -83,7 +83,7 @@ class Receptionist(models.Model):
 
 class LabStaff(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    lab = models.CharField(max_length=255, blank=True)
+    lab = models.ForeignKey("labs.Lab",on_delete=models.CASCADE)
 
 class Admin(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)

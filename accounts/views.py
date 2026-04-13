@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
 from accounts.models import Appointment, SuccessStory, User, Patient, AccountApprovalRequest, Provider, ProviderAvailability, Receptionist, Prescription
+from labs.models import Lab, LabRequest, LabResult
 import datetime
 
 def login_view(request):
@@ -25,6 +26,8 @@ def login_view(request):
                 return redirect('provider_dashboard')
             if user.role == 'receptionist':
                 return redirect('receptionist_dashboard')
+            if user.role == 'lab_staff':
+                return redirect('lab_dashboard')
             return redirect('dashboard')
         else:
             messages.error(request, 'Invalid username or password. Please try again.')
@@ -84,9 +87,13 @@ def dashboard_view(request):
     try:
         patient = Patient.objects.get(user=request.user)
         active_prescriptions = patient.get_active_prescriptions()
+        pending_requests = LabRequest.objects.filter(patient=patient, status='PENDING')
+        completed_results = LabResult.objects.filter(request__patient=patient).select_related('request')
     except Patient.DoesNotExist:
         patient = None
         active_prescriptions = []
+        pending_requests = []
+        completed_results = []
 
     approved_stories = SuccessStory.objects.filter(
         status='approved'
@@ -98,6 +105,8 @@ def dashboard_view(request):
         'prescriptions': active_prescriptions,
         'providers': Provider.objects.all(),
         'approved_stories': approved_stories,
+        'pending_requests': pending_requests,
+        'completed_results': completed_results,
     })
 
 @login_required
@@ -185,12 +194,16 @@ def provider_dashboard_view(request):
         prescription_count = Prescription.objects.filter(provider=provider).count()
         patient_count = Patient.objects.filter(appointments__provider=provider).distinct().count()
         patients = Patient.objects.filter(appointments__provider=provider).distinct()
+        labs = Lab.objects.all()
+        pending_lab_count = LabRequest.objects.filter(provider=provider, status='PENDING').count()
     except Provider.DoesNotExist:
         pending_appointments = []
         upcoming_appointments = []
         prescription_count = 0
         patient_count = 0
         patients = []
+        labs = []
+        pending_lab_count = 0
 
     return render(request, 'accounts/provider_dashboard.html', {
         'pending_appointments': pending_appointments,
@@ -198,6 +211,8 @@ def provider_dashboard_view(request):
         'prescription_count': prescription_count,
         'patient_count': patient_count,
         'patients': patients,
+        'labs': labs,
+        'pending_lab_count': pending_lab_count,
     })
     
 @login_required
