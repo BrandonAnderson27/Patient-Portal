@@ -1,87 +1,404 @@
-<!DOCTYPE html>
-<html>
-<head>
-
-<title>Lab Dashboard</title>
 {% load static %}
-<link rel="stylesheet" href="{% static 'css/lab_dashboard.css' %}">
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Patient Portal — Lab Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f0f4f1; --surface: #ffffff; --panel: #1b2e26; --panel2: #243d33;
+      --accent: #2d6a4f; --accent2: #52b788; --accent-pale: #edf7f1; --accent-pale2: #d8f0e3;
+      --text: #1a2820; --muted: #6b7c72; --border: #d0ddd4; --border2: #b8cebe;
+      --error: #c0392b; --error-bg: #fdf0ef; --error-border: #f0b9b5;
+      --success: #1e8449; --success-bg: #edf7f1; --success-border: #a9dfbf;
+      --warning: #b7770d; --warning-bg: #fef9e7; --warning-border: #f9e4a0;
+      --shadow: 0 4px 24px rgba(45,106,79,0.08); --shadow2: 0 8px 40px rgba(45,106,79,0.13);
+      --sidebar-w: 248px; --radius: 12px;
+    }
+    [data-theme="dark"] {
+      --bg: #0f1a14; --surface: #1b2e26; --panel: #0a1209; --panel2: #162018;
+      --accent: #52b788; --accent2: #74c99e; --accent-pale: #1b3326; --accent-pale2: #1f3d2c;
+      --text: #e8f0ea; --muted: #7a9982; --border: #2a3d30; --border2: #344d3a;
+    }
+    html, body { height: 100%; font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); transition: background .3s, color .3s; }
 
+    /* ── Loader ── */
+    .page-loader { position: fixed; inset: 0; background: var(--panel); display: flex; align-items: center; justify-content: center; z-index: 9999; transition: opacity .5s, visibility .5s; }
+    .page-loader.done { opacity: 0; visibility: hidden; }
+    .loader-mark { width: 44px; height: 44px; border-radius: 11px; background: var(--accent2); display: flex; align-items: center; justify-content: center; animation: pulse 1s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
 
+    /* ── Shell ── */
+    .shell { display: flex; min-height: 100vh; }
+
+    /* ── Sidebar ── */
+    .sidebar { width: var(--sidebar-w); background: var(--panel); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; overflow: hidden; transition: transform .3s; }
+    .sidebar::before { content: ''; position: absolute; width: 320px; height: 320px; border-radius: 50%; background: radial-gradient(circle, rgba(82,183,136,0.1) 0%, transparent 65%); top: -80px; left: -80px; pointer-events: none; }
+    .sb-logo { padding: 26px 22px 18px; display: flex; align-items: center; gap: 10px; position: relative; z-index: 1; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .sb-mark { width: 34px; height: 34px; border-radius: 8px; background: var(--accent2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .sb-mark svg { width: 18px; height: 18px; }
+    .sb-logo span { font-family: 'Lora', serif; font-size: 15px; font-weight: 600; color: #fff; }
+    .sb-user { padding: 16px 22px; border-bottom: 1px solid rgba(255,255,255,0.06); position: relative; z-index: 1; }
+    .sb-avatar { width: 40px; height: 40px; border-radius: 50%; background: rgba(82,183,136,0.2); border: 2px solid rgba(82,183,136,0.35); display: flex; align-items: center; justify-content: center; font-family: 'Lora', serif; font-size: 16px; font-weight: 600; color: var(--accent2); margin-bottom: 8px; }
+    .sb-name { font-size: 13.5px; font-weight: 600; color: #fff; }
+    .sb-role { font-size: 11px; color: rgba(255,255,255,0.38); margin-top: 2px; }
+    .sb-nav { flex: 1; padding: 10px; position: relative; z-index: 1; overflow-y: auto; }
+    .nav-section { font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.25); padding: 14px 12px 6px; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 9px; cursor: pointer; font-size: 13.5px; font-weight: 500; color: rgba(255,255,255,0.55); transition: all .18s; border: none; background: none; width: 100%; text-align: left; text-decoration: none; }
+    .nav-item svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; transition: transform .18s; }
+    .nav-item:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.9); }
+    .nav-item:hover svg { transform: translateX(2px); }
+    .nav-item.active { background: rgba(82,183,136,0.18); color: #fff; }
+    .nav-item.active svg { stroke: var(--accent2); }
+    .nav-badge { margin-left: auto; background: var(--accent2); color: var(--panel); font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; }
+    .nav-badge.red { background: #e05c5c; color: #fff; }
+    .sb-bottom { padding: 10px; position: relative; z-index: 1; border-top: 1px solid rgba(255,255,255,0.06); }
+    .sb-actions { display: flex; gap: 6px; padding: 6px 4px; }
+    .sb-action-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 9px; border-radius: 8px; background: none; border: none; font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.4); cursor: pointer; transition: all .16s; }
+    .sb-action-btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .sb-action-btn:hover { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.75); }
+
+    /* ── Main ── */
+    .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; }
+    .topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 32px; height: 62px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+    .topbar-left h2 { font-family: 'Lora', serif; font-size: 19px; font-weight: 600; color: var(--text); }
+    .topbar-left p { font-size: 12px; color: var(--muted); }
+    .topbar-right { display: flex; align-items: center; gap: 10px; }
+    .theme-btn { width: 34px; height: 34px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--bg); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .16s; }
+    .theme-btn:hover { border-color: var(--accent); background: var(--accent-pale); }
+    .theme-btn svg { width: 16px; height: 16px; stroke: var(--muted); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+    /* ── Content ── */
+    .content { padding: 28px 32px; flex: 1; }
+
+    /* ── Stat cards ── */
+    .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 28px; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; transition: all .2s; }
+    .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow2); border-color: var(--border2); }
+    .stat-card-icon { width: 38px; height: 38px; border-radius: 9px; background: var(--accent-pale); display: flex; align-items: center; justify-content: center; margin-bottom: 12px; }
+    .stat-card-icon svg { width: 20px; height: 20px; stroke: var(--accent); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .stat-card-icon.warn { background: var(--warning-bg); }
+    .stat-card-icon.warn svg { stroke: var(--warning); }
+    .stat-card-num { font-family: 'Lora', serif; font-size: 28px; font-weight: 600; color: var(--text); }
+    .stat-card-label { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    /* ── Section head ── */
+    .section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+    .section-head h3 { font-family: 'Lora', serif; font-size: 18px; font-weight: 600; }
+
+    /* ── Table ── */
+    .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .appt-table { width: 100%; border-collapse: collapse; }
+    .appt-table th { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); text-align: left; padding: 12px 18px; background: var(--bg); border-bottom: 1px solid var(--border); }
+    .appt-table td { padding: 14px 18px; font-size: 13.5px; color: var(--text); border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .appt-table tr:last-child td { border-bottom: none; }
+    .appt-table tr:hover td { background: var(--bg); }
+    .empty-state { text-align: center; padding: 40px; color: var(--muted); font-size: 14px; background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); }
+
+    /* ── Badges ── */
+    .badge-type { display: inline-block; padding: 3px 10px; border-radius: 5px; font-size: 11.5px; font-weight: 600; }
+    .badge-type.pending  { background: var(--warning-bg); color: var(--warning); }
+    .badge-type.completed { background: var(--accent-pale); color: var(--accent); }
+
+    /* ── Action buttons ── */
+    .btn-upload { padding: 6px 14px; background: var(--accent-pale); color: var(--accent); border: 1px solid var(--border2); border-radius: 7px; font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; text-decoration: none; transition: all .15s; display: inline-block; }
+    .btn-upload:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    /* ── Flash messages ── */
+    .flash-msgs { margin-bottom: 20px; }
+    .flash-msg { padding: 11px 14px; border-radius: 9px; font-size: 13px; margin-bottom: 7px; }
+    .flash-msg.error   { background: var(--error-bg);   color: var(--error);   border: 1px solid var(--error-border); }
+    .flash-msg.success { background: var(--success-bg); color: var(--success); border: 1px solid var(--success-border); }
+
+    /* ── Slide-over panel ── */
+    .panel-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 400; opacity: 0; visibility: hidden; transition: all .25s; }
+    .panel-overlay.show { opacity: 1; visibility: visible; }
+    .slide-panel { position: fixed; top: 0; right: 0; bottom: 0; width: 460px; max-width: 95vw; background: var(--surface); z-index: 401; transform: translateX(100%); transition: transform .3s cubic-bezier(.4,0,.2,1); display: flex; flex-direction: column; box-shadow: -8px 0 40px rgba(0,0,0,0.15); }
+    .panel-overlay.show .slide-panel { transform: translateX(0); }
+    .panel-header { padding: 24px 26px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-shrink: 0; }
+    .panel-header-text h3 { font-family: 'Lora', serif; font-size: 18px; font-weight: 600; color: var(--text); }
+    .panel-header-text p { font-size: 12.5px; color: var(--muted); margin-top: 4px; }
+    .panel-close { width: 32px; height: 32px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--bg); cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all .15s; }
+    .panel-close:hover { border-color: var(--accent); background: var(--accent-pale); }
+    .panel-close svg { width: 14px; height: 14px; stroke: var(--muted); fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+    .panel-body { padding: 26px; flex: 1; overflow-y: auto; }
+    .panel-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+    .meta-item { background: var(--bg); border: 1px solid var(--border); border-radius: 9px; padding: 12px 14px; }
+    .meta-label { font-size: 10.5px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+    .meta-value { font-size: 14px; font-weight: 500; color: var(--text); }
+    .field { position: relative; margin-bottom: 16px; }
+    .field-wrap { position: relative; }
+    .field input[type=text], .field textarea { width: 100%; padding: 17px 14px 7px; border: 1.5px solid var(--border); border-radius: 10px; background: var(--bg); font-family: 'DM Sans', sans-serif; font-size: 13.5px; color: var(--text); outline: none; transition: border-color .16s, box-shadow .16s; resize: vertical; }
+    .field input:focus, .field textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(45,106,79,0.08); background: var(--surface); }
+    .field label { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 13.5px; color: var(--muted); pointer-events: none; transition: all .16s; }
+    .field textarea ~ label { top: 16px; transform: none; }
+    .field input:focus ~ label, .field input:not(:placeholder-shown) ~ label, .field textarea:focus ~ label, .field textarea:not(:placeholder-shown) ~ label { top: 7px; transform: none; font-size: 10px; font-weight: 600; color: var(--accent); letter-spacing: 0.06em; text-transform: uppercase; }
+    .field input::placeholder, .field textarea::placeholder { color: transparent; }
+    .panel-actions { display: flex; gap: 10px; padding: 20px 26px; border-top: 1px solid var(--border); flex-shrink: 0; }
+    .btn-save { padding: 11px 28px; background: var(--accent); color: #fff; border: none; border-radius: 9px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: all .16s; }
+    .btn-save:hover { background: var(--panel2); transform: translateY(-1px); box-shadow: var(--shadow); }
+    .btn-cancel { padding: 11px 22px; background: var(--surface); color: var(--muted); border: 1.5px solid var(--border); border-radius: 9px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all .16s; }
+    .btn-cancel:hover { border-color: var(--text); color: var(--text); }
+
+    @media (max-width: 960px) {
+      .sidebar { transform: translateX(-100%); }
+      .main { margin-left: 0; }
+      .stat-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
 </head>
-
 <body>
 
-<header>
-
-<h2>Lab Staff Dashboard</h2>
-
-<nav>
-<a href="/labs/dashboard/">Lab Requests</a>
-<a href="/logout/">Logout</a>
-</nav>
-
-</header>
-
-
-<div class="container">
-
-<h2>Lab Requests</h2>
-
-<table>
-
-<tr>
-<th>Patient</th>
-<th>Test</th>
-<th>Status</th>
-<th>Action</th>
-</tr>
-
-{% for request in requests %}
-
-<tr>
-
-<td>
-{{ request.patient.user.first_name }}
-{{ request.patient.user.last_name }}
-</td>
-
-<td>
-{{ request.test_name }}
-</td>
-
-<td>
-
-{% if request.status == "PENDING" %}
-<span class="pending">Pending</span>
-{% else %}
-<span class="completed">Completed</span>
-{% endif %}
-
-</td>
-
-<td>
-
-{% if request.status == "PENDING" %}
-
-<a href="/labs/upload/{{ request.id }}/">
-Upload Result
-</a>
-
-{% else %}
-
-Completed
-
-{% endif %}
-
-</td>
-
-</tr>
-
-{% endfor %}
-
-</table>
-
+<div class="page-loader" id="loader">
+  <div class="loader-mark">
+    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+  </div>
 </div>
 
+<div class="shell">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <div class="sb-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      </div>
+      <span>Patient Portal</span>
+    </div>
+
+    <div class="sb-user">
+      <div class="sb-avatar">{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}</div>
+      <div class="sb-name">{{ user.get_full_name|default:user.username }}</div>
+      <div class="sb-role">Lab Staff</div>
+    </div>
+
+    <nav class="sb-nav">
+      <div class="nav-section">Lab</div>
+      <a class="nav-item active" href="{% url 'lab_dashboard' %}">
+        <svg viewBox="0 0 24 24"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/></svg>
+        Lab Requests
+        {% with pending_count=requests|length %}
+          {% if pending_count %}<span class="nav-badge red">{{ pending_count }}</span>{% endif %}
+        {% endwith %}
+      </a>
+    </nav>
+
+    <div class="sb-bottom">
+      <div class="sb-actions">
+        <button class="sb-action-btn" onclick="toggleTheme()">
+          <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          Theme
+        </button>
+        <form method="POST" action="{% url 'logout' %}" style="flex:1;">
+          {% csrf_token %}
+          <button type="submit" class="sb-action-btn" style="width:100%;">
+            <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+            Log out
+          </button>
+        </form>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <h2>Lab Requests</h2>
+        <p>Welcome back, {{ user.get_full_name|default:user.username }}</p>
+      </div>
+      <div class="topbar-right">
+        <button class="theme-btn" onclick="toggleTheme()">
+          <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="content">
+      {% if messages %}
+      <div class="flash-msgs">{% for message in messages %}<div class="flash-msg {{ message.tags }}">{{ message }}</div>{% endfor %}</div>
+      {% endif %}
+
+      <!-- Stat cards -->
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-card-icon warn">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          </div>
+          <div class="stat-card-num" data-count="{% for r in requests %}{% if r.status == 'PENDING' %}1{% endif %}{% endfor %}" id="count-pending">0</div>
+          <div class="stat-card-label">Pending Requests</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-icon">
+            <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+          </div>
+          <div class="stat-card-num" data-count="{% for r in requests %}{% if r.status == 'COMPLETED' %}1{% endif %}{% endfor %}" id="count-completed">0</div>
+          <div class="stat-card-label">Completed</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-icon">
+            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <div class="stat-card-num" data-count="{{ requests|length }}" id="count-total">0</div>
+          <div class="stat-card-label">Total Requests</div>
+        </div>
+      </div>
+
+      <!-- Requests table -->
+      <div class="section-head">
+        <h3>All Lab Requests</h3>
+      </div>
+
+      {% if requests %}
+      <div class="table-wrap">
+        <table class="appt-table">
+          <thead>
+            <tr>
+              <th>Patient</th>
+              <th>Test</th>
+              <th>Ordered By</th>
+              <th>Date</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for req in requests %}
+            <tr>
+              <td>{{ req.patient.user.first_name }} {{ req.patient.user.last_name }}</td>
+              <td>{{ req.test_name }}</td>
+              <td>Dr. {{ req.provider.user.last_name }}</td>
+              <td>{{ req.created_at|date:"M j, Y" }}</td>
+              <td>
+                {% if req.status == "PENDING" %}
+                  <span class="badge-type pending">Pending</span>
+                {% else %}
+                  <span class="badge-type completed">Completed</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if req.status == "PENDING" %}
+                  <button class="btn-upload" onclick="openUploadPanel('{{ req.id }}', '{{ req.patient.user.first_name }} {{ req.patient.user.last_name }}', '{{ req.test_name }}', 'Dr. {{ req.provider.user.last_name }}')">Upload Result</button>
+                {% else %}
+                  <span style="font-size:12px; color:var(--muted);">Done</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+        <div class="empty-state">No lab requests assigned to your lab yet.</div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+
+<!-- ── Upload Result Slide-over ── -->
+<div class="panel-overlay" id="upload-overlay" onclick="handleOverlayClick(event)">
+  <div class="slide-panel">
+    <div class="panel-header">
+      <div class="panel-header-text">
+        <h3>Upload Result</h3>
+        <p id="panel-subtitle">Enter the result for this lab request</p>
+      </div>
+      <button class="panel-close" onclick="closeUploadPanel()">
+        <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form method="POST" id="upload-form" action="">
+      {% csrf_token %}
+      <div class="panel-body">
+        <div class="panel-meta">
+          <div class="meta-item">
+            <div class="meta-label">Patient</div>
+            <div class="meta-value" id="panel-patient">—</div>
+          </div>
+          <div class="meta-item">
+            <div class="meta-label">Test</div>
+            <div class="meta-value" id="panel-test">—</div>
+          </div>
+          <div class="meta-item" style="grid-column: span 2;">
+            <div class="meta-label">Ordered By</div>
+            <div class="meta-value" id="panel-provider">—</div>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-wrap">
+            <textarea name="result" placeholder="Result" rows="5" required></textarea>
+            <label>Result</label>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-wrap">
+            <input type="text" name="reference" placeholder="e.g. 70–100 mg/dL" required/>
+            <label>Reference Range</label>
+          </div>
+        </div>
+      </div>
+      <div class="panel-actions">
+        <button type="submit" class="btn-save">Submit Result</button>
+        <button type="button" class="btn-cancel" onclick="closeUploadPanel()">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  window.addEventListener('load', () => setTimeout(() => document.getElementById('loader').classList.add('done'), 600));
+
+  const saved = localStorage.getItem('theme');
+  if (saved) document.documentElement.setAttribute('data-theme', saved);
+  function toggleTheme() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    localStorage.setItem('theme', isDark ? 'light' : 'dark');
+  }
+
+  // Animated stat counters
+  function animateCount(el) {
+    const raw = el.getAttribute('data-count') || '';
+    const target = raw.split('1').length - 1 || parseInt(raw) || 0;
+    el.setAttribute('data-count', target);
+    let current = 0;
+    const step = Math.max(1, target / 30);
+    const timer = setInterval(() => {
+      current = Math.min(current + step, target);
+      el.textContent = Math.floor(current);
+      if (current >= target) { el.textContent = target; clearInterval(timer); }
+    }, 40);
+  }
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { animateCount(e.target); observer.unobserve(e.target); } });
+  }, { threshold: 0.5 });
+  document.querySelectorAll('[data-count]').forEach(el => observer.observe(el));
+
+  // Slide-over panel
+  function openUploadPanel(requestId, patient, test, provider) {
+    document.getElementById('panel-patient').textContent = patient;
+    document.getElementById('panel-test').textContent = test;
+    document.getElementById('panel-provider').textContent = provider;
+    document.getElementById('upload-form').action = '/labs/upload/' + requestId + '/';
+    // Clear previous inputs
+    document.querySelector('#upload-form textarea[name=result]').value = '';
+    document.querySelector('#upload-form input[name=reference]').value = '';
+    document.getElementById('upload-overlay').classList.add('show');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeUploadPanel() {
+    document.getElementById('upload-overlay').classList.remove('show');
+    document.body.style.overflow = '';
+  }
+  function handleOverlayClick(e) {
+    if (e.target === document.getElementById('upload-overlay')) closeUploadPanel();
+  }
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeUploadPanel(); });
+</script>
 </body>
 </html>

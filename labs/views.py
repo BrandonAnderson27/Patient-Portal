@@ -5,7 +5,15 @@ from accounts.models import Patient, Provider
 
 def create_lab_request(request):
 
-    patients = Patient.objects.all()
+    if request.user.role != "provider":
+        return redirect("/") 
+
+    provider = Provider.objects.filter(user=request.user).first()
+
+    if not provider:
+        return redirect("/")
+
+    patients = provider.get_patient_list()
     labs = Lab.objects.all()
 
     if request.method == "POST":
@@ -15,7 +23,6 @@ def create_lab_request(request):
         test_name = request.POST.get("test_name")
         notes = request.POST.get("notes")
 
-        provider = Provider.objects.get(user=request.user)
         patient = Patient.objects.get(id=patient_id)
 
         LabRequest.objects.create(
@@ -26,17 +33,21 @@ def create_lab_request(request):
             notes=notes
         )
 
-        return redirect("lab_dashboard")
+        return redirect("/accounts/provider-dashboard/#tab-lab-request")
 
     return render(request, "create_request.html", {
         "patients": patients,
         "labs": labs
     })
 
-
 def lab_dashboard(request):
 
-    requests = LabRequest.objects.all()
+    if request.user.role != "lab_staff":
+        return redirect("/")
+
+    labstaff = request.user.labstaff
+
+    requests = LabRequest.objects.filter(lab=labstaff.lab)
 
     return render(request, "lab_dashboard.html", {
         "requests": requests
@@ -44,6 +55,8 @@ def lab_dashboard(request):
 
 
 def upload_result(request, request_id):
+    if request.user.role != "lab_staff":
+        return redirect("/")
 
     lab_request = get_object_or_404(LabRequest, id=request_id)
 
@@ -70,10 +83,23 @@ def upload_result(request, request_id):
 
 def patient_results(request):
 
+    if request.user.role != "patient":
+        return redirect("/")
+
     patient = Patient.objects.get(user=request.user)
+    
+    
+    pending_requests = LabRequest.objects.filter(
+        patient=patient,
+        status="PENDING"
+    )
 
-    results = LabResult.objects.filter(request__patient=patient)
+    completed_results = LabResult.objects.filter(
+        request__patient=patient
+    )
 
-    return render(request, "labs/patient_results.html", {
-        "results": results
+    return render(request, "patient_results.html", {
+        "pending_requests": pending_requests,
+        "completed_results": completed_results
     })
+
