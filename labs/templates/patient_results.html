@@ -3,62 +3,74 @@
 <head>
 
 <title>My Lab Results</title>
-{% load static %}
-<link rel="stylesheet" href="{% static 'css/patient_results.css' %}">
 
+
+<style>
+        body {
+            font-family: Arial;
+            background: #f4f6f8;
+            margin: 0;
+        }
+
+        header {
+            background: #2c3e50;
+            color: white;
+            padding: 15px;
+        }
+</style>
 
 </head>
 
-<body>
-
-<header>
-
-<h2>Patient Portal</h2>
-
-<nav>
-<a href="/portal/">Dashboard</a>
-<a href="/labs/results/">Lab Results</a>
-<a href="/logout/">Logout</a>
-</nav>
-
-</header>
-
-
-<div class="container">
-
 <h2>My Lab Results</h2>
 
-<table>
 
+<h3>Pending Requests</h3>
+
+{% if pending_requests %}
+<table border="1">
 <tr>
-<th>Test</th>
-<th>Result</th>
-<th>Date</th>
+    <th>Test</th>
+    <th>Status</th>
 </tr>
 
-{% for result in results %}
-
+{% for req in pending_requests %}
 <tr>
-
-<td>
-{{ result.request.test_name }}
-</td>
-
-<td>
-{{ result.result }}
-</td>
-
-<td>
-{{ result.created_at }}
-</td>
-
+    <td>{{ req.test_name }}</td>
+    <td>Pending</td>
 </tr>
-
 {% endfor %}
 
 </table>
 
-</div>
+{% else %}
+<p>No pending lab requests.</p>
+{% endif %}
+
+
+<!-- 🔷 Completed Section -->
+<h3>Completed Results</h3>
+
+{% if completed_results %}
+<table border="1">
+<tr>
+    <th>Test</th>
+    <th>Result</th>
+    <th>Reference</th>
+</tr>
+
+{% for res in completed_results %}
+<tr>
+    <td>{{ res.request.test_name }}</td>
+    <td>{{ res.result }}</td>
+    <td>{{ res.reference_range }}</td>
+</tr>
+{% endfor %}
+
+</table>
+
+{% else %}
+<p>No completed results yet.</p>
+{% endif %}
 
 </body>
 </html>
