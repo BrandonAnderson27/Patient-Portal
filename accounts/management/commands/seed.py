@@ -4,7 +4,9 @@ from accounts.models import (
     ProviderAvailability, Receptionist, LabStaff, Admin,
     AccountApprovalRequest, SuccessStory
 )
+from django.utils import timezone
 import datetime
+from labs.models import Lab
 
 class Command(BaseCommand):
     help = 'Seed the database with test data'
@@ -47,13 +49,17 @@ class Command(BaseCommand):
         )
         Receptionist.objects.create(user=receptionist_user, provider=provider)
 
-        # ── Lab Staff ─────────────────────────────────────────
+        # ── Lab Staff ─────────────────────────────────────────────
         self.stdout.write('Creating test lab staff...')
         labstaff_user = User.objects.create_user(
             username='testlabstaff', password='testpass123',
             first_name='Mike', last_name='Brown', role='lab_staff'
         )
-        LabStaff.objects.create(user=labstaff_user, lab='Main Diagnostics Lab')
+        lab, _ = Lab.objects.get_or_create(
+            name='Main Diagnostics Lab',
+            defaults={'location': '123 Lab Ave'}
+        )
+        LabStaff.objects.create(user=labstaff_user, lab=lab)
 
         # ── Patient ───────────────────────────────────────────
         self.stdout.write('Creating test patient...')
@@ -71,7 +77,7 @@ class Command(BaseCommand):
         AccountApprovalRequest.objects.create(
             patient=patient,
             status='approved',
-            reviewed_at=datetime.datetime.now(),
+            reviewed_at=timezone.now(),
             reviewed_by=admin_user
         )
 
@@ -149,7 +155,7 @@ class Command(BaseCommand):
                     'Within weeks I was back on my feet. Cannot recommend this clinic enough!',
             status='approved',
             reviewed_by=admin_user,
-            reviewed_at=datetime.datetime.now()
+            reviewed_at=timezone.now()
         )
         SuccessStory.objects.create(
             patient=patient,
@@ -162,7 +168,7 @@ class Command(BaseCommand):
             content='This is a test story that was rejected during review.',
             status='rejected',
             reviewed_by=admin_user,
-            reviewed_at=datetime.datetime.now()
+            reviewed_at=timezone.now()
         )
 
         self.stdout.write(self.style.SUCCESS('\nDone! Test accounts:'))
