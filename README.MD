@@ -4,10 +4,11 @@
 
 Make sure you have the correct Python version installed.
 
-Check your Python version:
+Check your Python and Postgres versions:
 
 ```bash
 python --version
+postgres --version
 ```
 
 Required:
@@ -121,7 +122,7 @@ After activation, you should see:
 Install required packages:
 
 ```bash
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 ```
 
 ---
@@ -198,3 +199,9 @@ Patient-Portal/
 - The admin account can approve patient registrations from the admin dashboard
 - All role-based dashboards are protected — users are redirected if they access the wrong dashboard
 - The seed command can be re-run at any time to reset test data; it cleans up existing test accounts before re-creating them
+- Bill generation functionality is not fully implemented. To create a new Bill, navigate to http://127.0.0.1:8000/admin and log in with superuser credentials:
+
+```
+username: super
+password: super
+```

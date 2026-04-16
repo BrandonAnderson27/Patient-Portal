@@ -2,11 +2,11 @@ from django.core.management.base import BaseCommand
 from accounts.models import (
     User, Patient, Provider, Appointment, Prescription,
     ProviderAvailability, Receptionist, LabStaff, Admin,
-    AccountApprovalRequest, SuccessStory
+    AccountApprovalRequest, SuccessStory, MessageAccess, Message, Bill
 )
 from django.utils import timezone
 import datetime
-from labs.models import Lab
+from labs.models import Lab, LabRequest, LabResult
 
 class Command(BaseCommand):
     help = 'Seed the database with test data'
@@ -18,16 +18,6 @@ class Command(BaseCommand):
             'testpatient', 'testprovider', 'testreceptionist',
             'testadmin', 'testlabstaff'
         ]).delete()
-
-        # ── Admin ─────────────────────────────────────────────
-        self.stdout.write('Creating test admin...')
-        admin_user = User.objects.create_user(
-            username='testadmin', password='testpass123',
-            first_name='Carol', last_name='White', role='admin'
-        )
-        admin_user.is_staff = True
-        admin_user.save()
-        Admin.objects.create(user=admin_user, admin_level='superadmin')
 
         # ── Provider ──────────────────────────────────────────
         self.stdout.write('Creating test provider...')
@@ -71,8 +61,20 @@ class Command(BaseCommand):
             user=patient_user,
             is_approved=True,
             address='123 Main St, Springfield',
-            insurance_provider='BlueCross',
-            medical_record='MR-00123'
+            gender='Male',
+            contact_number='555-123-4567',
+            emergency_contact='555-987-6543',
+            insurance_name='BlueCross',
+            insurance_member_id='MR-00123',
+            insurance_group='GRP-001',
+            insurance_contact='555-111-2222',
+            previous_clinic='Springfield General',
+            previous_doctor='Dr. Adams',
+            weight='180 lbs',
+            height='5\'11"',
+            blood_pressure='120/80',
+            temperature='98.6',
+            preconditions='None'
         )
         AccountApprovalRequest.objects.create(
             patient=patient,
@@ -170,6 +172,92 @@ class Command(BaseCommand):
             reviewed_by=admin_user,
             reviewed_at=timezone.now()
         )
+        # ── Messages ──────────────────────────────────────────
+        self.stdout.write('Creating test messages...')
+        MessageAccess.objects.create(provider=provider, patient=patient)
+
+        Message.objects.create(
+            sender=patient_user,
+            recipient=provider_user,
+            body='Hello Dr. Smith, I have been experiencing some side effects from the Amoxicillin. Should I be concerned?',
+            is_read=True
+        )
+        Message.objects.create(
+            sender=provider_user,
+            recipient=patient_user,
+            body='Hi John, some mild side effects are normal. If you experience severe symptoms please contact us immediately.',
+            is_read=True
+        )
+        Message.objects.create(
+            sender=patient_user,
+            recipient=provider_user,
+            body='Thank you doctor. One more question — can I take this with ibuprofen?',
+            is_read=False
+        )
+
+        # ── Lab Requests & Results ────────────────────────────
+        self.stdout.write('Creating test lab requests and results...')
+        lab_request_completed = LabRequest.objects.create(
+            patient=patient,
+            provider=provider,
+            lab=lab,
+            test_name='Complete Blood Count (CBC)',
+            notes='Routine checkup panel',
+            status='COMPLETED'
+        )
+        LabResult.objects.create(
+            request=lab_request_completed,
+            result='WBC: 6.5, RBC: 4.8, Hemoglobin: 14.2, Hematocrit: 42%, Platelets: 250 — all within normal range.',
+            reference_range='WBC: 4.5–11.0, RBC: 4.5–5.5, Hemoglobin: 13.5–17.5'
+        )
+
+        lab_request_pending = LabRequest.objects.create(
+            patient=patient,
+            provider=provider,
+            lab=lab,
+            test_name='Lipid Panel',
+            notes='Check cholesterol levels',
+            status='PENDING'
+        )
+
+        # ── Bills ─────────────────────────────────────────────
+        self.stdout.write('Creating test bills...')
+        Bill.objects.create(
+            patient=patient,
+            description='Office Visit - Dr. Smith',
+            amount=150.00,
+            status='paid',
+            paid_at=datetime.date.today() - datetime.timedelta(days=28)
+        )
+        Bill.objects.create(
+            patient=patient,
+            description='Lab Work - Complete Blood Count',
+            amount=75.50,
+            status='paid',
+            paid_at=datetime.date.today() - datetime.timedelta(days=28)
+        )
+        Bill.objects.create(
+            patient=patient,
+            description='Follow-up Visit - Dr. Smith',
+            amount=100.00,
+            status='unpaid'
+        )
+        Bill.objects.create(
+            patient=patient,
+            description='Prescription - Amoxicillin',
+            amount=25.00,
+            status='unpaid'
+        )
+        # ── Admin ─────────────────────────────────────────────
+        self.stdout.write('Creating test admin...')
+        admin_user = User.objects.create_user(
+            username='testadmin', password='testpass123',
+            first_name='Carol', last_name='White', role='admin'
+        )
+        admin_user.is_staff = True
+        admin_user.is_superuser = True
+        admin_user.save()
+        Admin.objects.create(user=admin_user, admin_level='superadmin')
 
         self.stdout.write(self.style.SUCCESS('\nDone! Test accounts:'))
         self.stdout.write('  Patient:      testpatient / testpass123')
