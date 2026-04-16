@@ -28,22 +28,29 @@ cd patient-portal
 
 ---
 
-## Database Setup
+## Environment Configuration
 
-This project uses PostgreSQL. Before running migrations, create a local PostgreSQL database and update the `DATABASES` setting in `settings.py` with your credentials:
+This project uses environment variables (via python-decouple) for sensitive settings like the secret key and database credentials.
 
-```python
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'patient_portal',   # or any name you choose
-        'USER': 'your_postgres_username',
-        'PASSWORD': 'your_postgres_password',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
-}
+Create a .env file in the root of hte project directory that contains this: 
+
 ```
+SECRET_KEY=your-secret-key-here
+DEBUG=True
+
+DB_NAME=postgres
+DB_USER=your_postgres_username
+DB_PASSWORD=your_postgres_password
+DB_HOST=localhost
+DB_PORT=5432
+```
+
+To generate a secure Django secret key, run this command: 
+
+```
+python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+```
+Paste that key into .env
 
 To create a new database in PostgreSQL:
 
@@ -52,6 +59,8 @@ psql -U postgres
 CREATE DATABASE patient_portal;
 \q
 ```
+
+Paste the name of the database into .env
 
 ---
 
