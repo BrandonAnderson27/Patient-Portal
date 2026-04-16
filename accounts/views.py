@@ -122,6 +122,7 @@ def dashboard_view(request):
         'messages_inbox': inbox,
         'unread_count': unread_count,
         'accessible_providers': accessible_providers,
+        'patient': patient,
     })
 
 @login_required
@@ -423,3 +424,57 @@ def mark_message_read(request, message_id):
     msg.save()
     next_url = request.META.get('HTTP_REFERER') or 'dashboard'
     return redirect(next_url)
+
+
+@login_required
+@role_required('patient')
+def update_profile(request):
+    if request.method == 'POST':
+        patient = Patient.objects.get(user=request.user)
+        update_type = request.POST.get('update_type')
+
+        if update_type == 'personal':
+            patient.date_of_birth = request.POST.get('date_of_birth') or None
+            patient.gender = request.POST.get('gender', '')
+            patient.contact_number = request.POST.get('contact_number', '')
+            patient.emergency_contact = request.POST.get('emergency_contact', '')
+            patient.address = request.POST.get('address', '')
+            patient.save()
+
+            new_password = request.POST.get('new_password', '')
+            confirm_password = request.POST.get('confirm_password', '')
+            if new_password:
+                if new_password == confirm_password:
+                    from django.contrib.auth import update_session_auth_hash
+                    request.user.set_password(new_password)
+                    request.user.save()
+                    update_session_auth_hash(request, request.user)
+                    messages.success(request, 'Password updated successfully.')
+                else:
+                    messages.error(request, 'Passwords do not match.')
+                    return redirect('dashboard')
+
+            messages.success(request, 'Personal information updated.')
+
+        elif update_type == 'insurance':
+            patient.insurance_name = request.POST.get('insurance_name', '')
+            patient.insurance_member_id = request.POST.get('insurance_member_id', '')
+            patient.insurance_group = request.POST.get('insurance_group', '')
+            patient.insurance_coverage_date = request.POST.get('insurance_coverage_date') or None
+            patient.insurance_contact = request.POST.get('insurance_contact', '')
+            patient.insurance_address = request.POST.get('insurance_address', '')
+            patient.save()
+            messages.success(request, 'Insurance information updated.')
+
+        elif update_type == 'medical':
+            patient.previous_clinic = request.POST.get('previous_clinic', '')
+            patient.previous_doctor = request.POST.get('previous_doctor', '')
+            patient.weight = request.POST.get('weight', '')
+            patient.height = request.POST.get('height', '')
+            patient.blood_pressure = request.POST.get('blood_pressure', '')
+            patient.temperature = request.POST.get('temperature', '')
+            patient.preconditions = request.POST.get('preconditions', '')
+            patient.save()
+            messages.success(request, 'Medical information updated.')
+
+    return redirect('dashboard')

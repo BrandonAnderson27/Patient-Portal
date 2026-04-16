@@ -22,10 +22,31 @@ class User(AbstractUser):
 
 class Patient(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    address = models.CharField(max_length=255, blank=True)
-    insurance_provider = models.CharField(max_length=255, blank=True)
-    medical_record = models.CharField(max_length=255, blank=True)
     is_approved = models.BooleanField(default=False)
+
+    # Personal
+    date_of_birth = models.DateField(null=True, blank=True)
+    gender = models.CharField(max_length=10, blank=True)
+    contact_number = models.CharField(max_length=20, blank=True)
+    emergency_contact = models.CharField(max_length=20, blank=True)
+    address = models.CharField(max_length=255, blank=True)
+
+    # Insurance
+    insurance_name = models.CharField(max_length=255, blank=True)
+    insurance_member_id = models.CharField(max_length=100, blank=True)
+    insurance_group = models.CharField(max_length=100, blank=True)
+    insurance_coverage_date = models.DateField(null=True, blank=True)
+    insurance_contact = models.CharField(max_length=20, blank=True)
+    insurance_address = models.CharField(max_length=255, blank=True)
+
+    # Medical
+    previous_clinic = models.CharField(max_length=255, blank=True)
+    previous_doctor = models.CharField(max_length=255, blank=True)
+    weight = models.CharField(max_length=20, blank=True)
+    height = models.CharField(max_length=20, blank=True)
+    blood_pressure = models.CharField(max_length=20, blank=True)
+    temperature = models.CharField(max_length=20, blank=True)
+    preconditions = models.TextField(blank=True)
 
     def get_upcoming_appointments(self):
         from django.utils import timezone
