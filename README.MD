@@ -204,6 +204,6 @@ Patient-Portal/
 - Bill generation functionality is not fully implemented. To create a new Bill, navigate to http://127.0.0.1:8000/admin and log in with superuser credentials:
 
 ```
-username: super
-password: super
+username: testadmin
+password: testpass123
 ```
