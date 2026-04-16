@@ -23,8 +23,8 @@ Required:
 Clone the repository:
 
 ```
-git clone https://github.com/your-username/patient-portal.git
-cd patient-portal
+git clone https://github.com/BrandonAnderson27/patient-portal.git
+cd Patient-Portal
 ```
 
 ---
@@ -33,7 +33,7 @@ cd patient-portal
 
 This project uses environment variables (via python-decouple) for sensitive settings like the secret key and database credentials.
 
-Create a .env file in the root of hte project directory that contains this: 
+Create a .env file in the root of hte project directory (Patient-Portal) that contains this: 
 
 ```
 SECRET_KEY=your-secret-key-here
@@ -62,6 +62,8 @@ CREATE DATABASE patient_portal;
 ```
 
 Paste the name of the database into .env
+
+Once you have filled in your data in .env do "File -> Save All"
 
 ---
 

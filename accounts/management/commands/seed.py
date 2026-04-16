@@ -19,6 +19,17 @@ class Command(BaseCommand):
             'testadmin', 'testlabstaff'
         ]).delete()
 
+        # ── Admin ─────────────────────────────────────────────
+        self.stdout.write('Creating test admin...')
+        admin_user = User.objects.create_user(
+            username='testadmin', password='testpass123',
+            first_name='Carol', last_name='White', role='admin'
+        )
+        admin_user.is_staff = True
+        admin_user.is_superuser = True
+        admin_user.save()
+        Admin.objects.create(user=admin_user, admin_level='superadmin')
+
         # ── Provider ──────────────────────────────────────────
         self.stdout.write('Creating test provider...')
         provider_user = User.objects.create_user(
@@ -143,7 +154,7 @@ class Command(BaseCommand):
             instructions='Take in the morning',
             prescribed_date=datetime.date.today() - datetime.timedelta(days=90),
             start_date=datetime.date.today() - datetime.timedelta(days=90),
-            end_date=None,  # indefinite
+            end_date=None,
             refills_allowed=5,
             refills_remaining=3,
             status='active'
@@ -172,6 +183,7 @@ class Command(BaseCommand):
             reviewed_by=admin_user,
             reviewed_at=timezone.now()
         )
+
         # ── Messages ──────────────────────────────────────────
         self.stdout.write('Creating test messages...')
         MessageAccess.objects.create(provider=provider, patient=patient)
@@ -210,8 +222,7 @@ class Command(BaseCommand):
             result='WBC: 6.5, RBC: 4.8, Hemoglobin: 14.2, Hematocrit: 42%, Platelets: 250 — all within normal range.',
             reference_range='WBC: 4.5–11.0, RBC: 4.5–5.5, Hemoglobin: 13.5–17.5'
         )
-
-        lab_request_pending = LabRequest.objects.create(
+        LabRequest.objects.create(
             patient=patient,
             provider=provider,
             lab=lab,
@@ -248,20 +259,10 @@ class Command(BaseCommand):
             amount=25.00,
             status='unpaid'
         )
-        # ── Admin ─────────────────────────────────────────────
-        self.stdout.write('Creating test admin...')
-        admin_user = User.objects.create_user(
-            username='testadmin', password='testpass123',
-            first_name='Carol', last_name='White', role='admin'
-        )
-        admin_user.is_staff = True
-        admin_user.is_superuser = True
-        admin_user.save()
-        Admin.objects.create(user=admin_user, admin_level='superadmin')
 
         self.stdout.write(self.style.SUCCESS('\nDone! Test accounts:'))
         self.stdout.write('  Patient:      testpatient / testpass123')
         self.stdout.write('  Provider:     testprovider / testpass123')
         self.stdout.write('  Receptionist: testreceptionist / testpass123')
         self.stdout.write('  Lab Staff:    testlabstaff / testpass123')
-        self.stdout.write('  Admin:        testadmin / testpass123')
+        self.stdout.write('  Admin:        testadmin / testpass123  (superuser)')
