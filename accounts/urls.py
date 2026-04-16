@@ -23,4 +23,5 @@ urlpatterns = [
     path('messages/read/<int:message_id>/', views.mark_message_read, name='mark_message_read'),
     path('messages/send-provider/', views.send_message_provider, name='send_message_provider'),
     path('update-profile/', views.update_profile, name='update_profile'),
+    path('bills/<int:bill_id>/pay/', views.mark_bill_paid, name='mark_bill_paid'),
 ]

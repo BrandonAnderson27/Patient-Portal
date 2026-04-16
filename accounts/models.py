@@ -237,3 +237,18 @@ class Message(models.Model):
 
     def __str__(self):
         return f"From {self.sender} to {self.recipient} at {self.sent_at}"
+    
+class Bill(models.Model):
+    STATUS_CHOICES = [
+        ('unpaid', 'Unpaid'),
+        ('paid', 'Paid'),
+    ]
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='bills')
+    description = models.CharField(max_length=255)  # e.g. "Office Visit - Dr. Smith"
+    amount = models.DecimalField(max_digits=8, decimal_places=2)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='unpaid')
+    created_at = models.DateField(auto_now_add=True)
+    paid_at = models.DateField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.patient} - {self.description} (${self.amount})"

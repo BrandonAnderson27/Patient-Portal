@@ -636,10 +636,47 @@
       <!-- BILLING                            -->
       <!-- ══════════════════════════════════ -->
       <div class="tab-panel" id="tab-billing">
-        <div class="section-head"><h3>Billing</h3><button class="btn-save" onclick="window.print()" style="padding:8px 18px;font-size:13px;">Print Bills</button></div>
+        <div class="section-head">
+          <h3>Billing</h3>
+          <button class="btn-save" onclick="window.print()" style="padding:8px 18px;font-size:13px;">Print Bills</button>
+        </div>
         <div class="two-col">
-          <div class="panel-card"><h4>Unpaid Bills <span class="tag-unpaid">Unpaid</span></h4>{% if unpaid_bills %}{% for bill in unpaid_bills %}<div class="report-item"><div class="report-icon"><svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg></div><span class="report-name">{{ bill.name }}</span><a href="{{ bill.url }}" class="report-link">View</a></div>{% endfor %}{% else %}<p style="font-size:13px;color:var(--muted);padding:8px 0">No unpaid bills.</p>{% endif %}</div>
-          <div class="panel-card"><h4>Previous Bills <span class="tag-paid">Paid</span></h4>{% if paid_bills %}{% for bill in paid_bills %}<div class="report-item"><div class="report-icon"><svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg></div><span class="report-name">{{ bill.name }}</span><a href="{{ bill.url }}" class="report-link">View</a></div>{% endfor %}{% else %}<p style="font-size:13px;color:var(--muted);padding:8px 0">No previous bills.</p>{% endif %}</div>
+
+          <div class="panel-card">
+            <h4>Unpaid Bills <span class="tag-unpaid">Unpaid</span></h4>
+            {% if unpaid_bills %}
+              {% for bill in unpaid_bills %}
+              <div class="report-item">
+                <div style="flex:1;">
+                  <div style="font-size:13.5px; font-weight:500;">{{ bill.description }}</div>
+                  <div style="font-size:12px; color:var(--muted);">Due: {{ bill.created_at }}</div>
+                </div>
+                <strong style="font-size:14px; margin-right:12px;">${{ bill.amount }}</strong>
+                <a href="{% url 'mark_bill_paid' bill.id %}" class="report-link">Mark Paid</a>
+              </div>
+              {% endfor %}
+            {% else %}
+              <p style="font-size:13px;color:var(--muted);padding:8px 0">No unpaid bills.</p>
+            {% endif %}
+          </div>
+
+          <div class="panel-card">
+            <h4>Paid Bills <span class="tag-paid">Paid</span></h4>
+            {% if paid_bills %}
+              {% for bill in paid_bills %}
+              <div class="report-item">
+                <div style="flex:1;">
+                  <div style="font-size:13.5px; font-weight:500;">{{ bill.description }}</div>
+                  <div style="font-size:12px; color:var(--muted);">Paid: {{ bill.paid_at }}</div>
+                </div>
+                <strong style="font-size:14px;">${{ bill.amount }}</strong>
+              </div>
+              {% endfor %}
+            {% else %}
+              <p style="font-size:13px;color:var(--muted);padding:8px 0">No paid bills on record.</p>
+            {% endif %}
+          </div>
+
         </div>
       </div>
 

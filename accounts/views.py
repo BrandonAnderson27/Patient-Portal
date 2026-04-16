@@ -4,7 +4,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
-from accounts.models import Appointment, SuccessStory, User, Patient, AccountApprovalRequest, Provider, ProviderAvailability, Receptionist, Prescription, Message, MessageAccess
+from accounts.models import Appointment, Bill, SuccessStory, User, Patient, AccountApprovalRequest, Provider, ProviderAvailability, Receptionist, Prescription, Message, MessageAccess
 from labs.models import Lab, LabRequest, LabResult
 from accounts.decorators import role_required
 import datetime
@@ -110,6 +110,10 @@ def dashboard_view(request):
         )
     else:
         accessible_providers = []
+        
+    unpaid_bills = Bill.objects.filter(patient=patient, status='unpaid').order_by('-created_at') if patient else []
+    paid_bills = Bill.objects.filter(patient=patient, status='paid').order_by('-paid_at') if patient else []
+
 
     return render(request, 'accounts/dashboard.html', {
         'future_appointments': patient.get_upcoming_appointments() if patient else [],
@@ -123,6 +127,8 @@ def dashboard_view(request):
         'unread_count': unread_count,
         'accessible_providers': accessible_providers,
         'patient': patient,
+        'unpaid_bills': unpaid_bills,   
+        'paid_bills': paid_bills,
     })
 
 @login_required
@@ -478,3 +484,15 @@ def update_profile(request):
             messages.success(request, 'Medical information updated.')
 
     return redirect('dashboard')
+
+@login_required
+@role_required('patient')
+def mark_bill_paid(request, bill_id):
+    import datetime
+    bill = Bill.objects.get(id=bill_id, patient__user=request.user)
+    bill.status = 'paid'
+    bill.paid_at = datetime.date.today()
+    bill.save()
+    messages.success(request, 'Bill marked as paid.')
+    next_url = request.META.get('HTTP_REFERER') or 'dashboard'
+    return redirect(next_url)
