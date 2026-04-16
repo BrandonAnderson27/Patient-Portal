@@ -17,4 +17,9 @@ urlpatterns = [
     path('success-story/<int:story_id>/approve/', views.approve_story, name='approve_story'),
     path('success-story/<int:story_id>/reject/', views.reject_story, name='reject_story'),
     path('admin-dashboard/', views.admin_dashboard_view, name='admin_dashboard'),
+    path('messages/send/', views.send_message, name='send_message'),
+    path('messages/grant/<int:patient_id>/', views.grant_message_access, name='grant_message_access'),
+    path('messages/revoke/<int:patient_id>/', views.revoke_message_access, name='revoke_message_access'),
+    path('messages/read/<int:message_id>/', views.mark_message_read, name='mark_message_read'),
+    path('messages/send-provider/', views.send_message_provider, name='send_message_provider'),
 ]

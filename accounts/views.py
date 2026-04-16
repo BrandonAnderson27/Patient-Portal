@@ -4,8 +4,9 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
-from accounts.models import Appointment, SuccessStory, User, Patient, AccountApprovalRequest, Provider, ProviderAvailability, Receptionist, Prescription
+from accounts.models import Appointment, SuccessStory, User, Patient, AccountApprovalRequest, Provider, ProviderAvailability, Receptionist, Prescription, Message, MessageAccess
 from labs.models import Lab, LabRequest, LabResult
+from accounts.decorators import role_required
 import datetime
 
 def login_view(request):
@@ -83,6 +84,7 @@ def register_view(request):
     return render(request, 'accounts/register.html')
 
 @login_required
+@role_required('patient')
 def dashboard_view(request):
     try:
         patient = Patient.objects.get(user=request.user)
@@ -95,9 +97,19 @@ def dashboard_view(request):
         pending_requests = []
         completed_results = []
 
-    approved_stories = SuccessStory.objects.filter(
-        status='approved'
-    ).order_by('-created_at')
+    approved_stories = SuccessStory.objects.filter(status='approved').order_by('-created_at')
+
+    # Messaging
+    inbox = Message.objects.filter(recipient=request.user).order_by('-sent_at')
+    unread_count = inbox.filter(is_read=False).count()
+
+    # Which providers has this patient been granted access to message?
+    if patient:
+        accessible_providers = Provider.objects.filter(
+            message_access_grants__patient=patient
+        )
+    else:
+        accessible_providers = []
 
     return render(request, 'accounts/dashboard.html', {
         'future_appointments': patient.get_upcoming_appointments() if patient else [],
@@ -107,6 +119,9 @@ def dashboard_view(request):
         'approved_stories': approved_stories,
         'pending_requests': pending_requests,
         'completed_results': completed_results,
+        'messages_inbox': inbox,
+        'unread_count': unread_count,
+        'accessible_providers': accessible_providers,
     })
 
 @login_required
@@ -179,23 +194,23 @@ def deny_appointment(request, appointment_id):
     return redirect('provider_dashboard')
 
 @login_required
+@role_required('provider')
 def provider_dashboard_view(request):
     try:
         provider = Provider.objects.get(user=request.user)
-        pending_appointments = Appointment.objects.filter(
-            provider=provider,
-            status='pending'
-        ).order_by('date', 'time')
-        upcoming_appointments = Appointment.objects.filter(
-            provider=provider,
-            status='scheduled',
-            date__gte=datetime.date.today()
-        ).order_by('date', 'time')
+        pending_appointments = Appointment.objects.filter(provider=provider, status='pending').order_by('date', 'time')
+        upcoming_appointments = Appointment.objects.filter(provider=provider, status='scheduled', date__gte=datetime.date.today()).order_by('date', 'time')
         prescription_count = Prescription.objects.filter(provider=provider).count()
         patient_count = Patient.objects.filter(appointments__provider=provider).distinct().count()
         patients = Patient.objects.filter(appointments__provider=provider).distinct()
         labs = Lab.objects.all()
         pending_lab_count = LabRequest.objects.filter(provider=provider, status='PENDING').count()
+
+        # Messaging
+        inbox = Message.objects.filter(recipient=request.user).order_by('-sent_at')
+        unread_count = inbox.filter(is_read=False).count()
+        granted_patient_ids = MessageAccess.objects.filter(provider=provider).values_list('patient_id', flat=True)
+
     except Provider.DoesNotExist:
         pending_appointments = []
         upcoming_appointments = []
@@ -204,6 +219,9 @@ def provider_dashboard_view(request):
         patients = []
         labs = []
         pending_lab_count = 0
+        inbox = []
+        unread_count = 0
+        granted_patient_ids = []
 
     return render(request, 'accounts/provider_dashboard.html', {
         'pending_appointments': pending_appointments,
@@ -213,9 +231,13 @@ def provider_dashboard_view(request):
         'patients': patients,
         'labs': labs,
         'pending_lab_count': pending_lab_count,
+        'messages_inbox': inbox,
+        'unread_count': unread_count,
+        'granted_patient_ids': granted_patient_ids,
     })
     
 @login_required
+@role_required('receptionist')
 def receptionist_dashboard_view(request):
     try:
         receptionist = Receptionist.objects.get(user=request.user)
@@ -312,3 +334,92 @@ def admin_dashboard_view(request):
     return render(request, 'accounts/admin_dashboard.html', {
         'pending_stories': pending_stories,
     })
+    
+@login_required
+@role_required('patient')
+def send_message(request):
+    if request.method == 'POST':
+        patient = Patient.objects.get(user=request.user)
+        provider_id = request.POST.get('provider_id')
+
+        # Make sure this patient actually has access to message this provider
+        has_access = MessageAccess.objects.filter(
+            patient=patient,
+            provider_id=provider_id
+        ).exists()
+
+        if not has_access:
+            messages.error(request, 'You do not have permission to message this provider.')
+            return redirect('dashboard')
+
+        provider = Provider.objects.get(id=provider_id)
+        body = request.POST.get('body', '').strip()
+
+        if body:
+            Message.objects.create(
+                sender=request.user,
+                recipient=provider.user,
+                body=body
+            )
+            messages.success(request, 'Message sent.')
+
+    next_url = request.META.get('HTTP_REFERER') or 'dashboard'
+    return redirect(next_url)
+
+@login_required
+@role_required('provider')
+def send_message_provider(request):
+    if request.method == 'POST':
+        provider = Provider.objects.get(user=request.user)
+        patient_id = request.POST.get('patient_id')
+
+        # Make sure this provider has granted access to this patient (they're in their patient list)
+        patient = Patient.objects.get(id=patient_id)
+        has_access = MessageAccess.objects.filter(
+            patient=patient,
+            provider=provider
+        ).exists()
+
+        if not has_access:
+            messages.error(request, 'You do not have permission to message this patient.')
+            return redirect('dashboard')
+
+        body = request.POST.get('body', '').strip()
+        if body:
+            Message.objects.create(
+                sender=request.user,
+                recipient=patient.user,
+                body=body
+            )
+            messages.success(request, 'Message sent.')
+
+    next_url = request.META.get('HTTP_REFERER') or 'dashboard'
+    return redirect(next_url)
+
+
+@login_required
+@role_required('provider')
+def grant_message_access(request, patient_id):
+    provider = Provider.objects.get(user=request.user)
+    patient = Patient.objects.get(id=patient_id)
+    MessageAccess.objects.get_or_create(provider=provider, patient=patient)
+    messages.success(request, f'Message access granted to {patient}.')
+    return redirect('provider_dashboard')
+
+
+@login_required
+@role_required('provider')
+def revoke_message_access(request, patient_id):
+    provider = Provider.objects.get(user=request.user)
+    MessageAccess.objects.filter(provider=provider, patient_id=patient_id).delete()
+    messages.success(request, 'Message access revoked.')
+    return redirect('provider_dashboard')
+
+
+@login_required
+def mark_message_read(request, message_id):
+    msg = Message.objects.get(id=message_id, recipient=request.user)
+    msg.is_read = True
+    msg.save()
+    next_url = request.META.get('HTTP_REFERER') or 'dashboard'
+    return redirect(next_url)

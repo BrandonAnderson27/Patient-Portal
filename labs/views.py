@@ -1,12 +1,12 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Lab, LabRequest, LabResult
 from accounts.models import Patient, Provider
+from accounts.decorators import role_required
+from django.contrib.auth.decorators import login_required
 
-
+@login_required
+@role_required('provider')
 def create_lab_request(request):
-
-    if request.user.role != "provider":
-        return redirect("/") 
 
     provider = Provider.objects.filter(user=request.user).first()
 
@@ -40,10 +40,9 @@ def create_lab_request(request):
         "labs": labs
     })
 
+@login_required
+@role_required('lab_staff')
 def lab_dashboard(request):
-
-    if request.user.role != "lab_staff":
-        return redirect("/")
 
     labstaff = request.user.labstaff
 
@@ -53,10 +52,9 @@ def lab_dashboard(request):
         "requests": requests
     })
 
-
+@login_required
+@role_required('lab_staff')
 def upload_result(request, request_id):
-    if request.user.role != "lab_staff":
-        return redirect("/")
 
     lab_request = get_object_or_404(LabRequest, id=request_id)
 
@@ -80,11 +78,9 @@ def upload_result(request, request_id):
         "request": lab_request
     })
 
-
+@login_required
+@role_required('patient')
 def patient_results(request):
-
-    if request.user.role != "patient":
-        return redirect("/")
 
     patient = Patient.objects.get(user=request.user)
     

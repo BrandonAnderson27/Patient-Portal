@@ -194,3 +194,25 @@ class SuccessStory(models.Model):
 
     def __str__(self):
         return f"Story by {self.patient} - {self.status}"
+    
+class MessageAccess(models.Model):
+    """Provider grants a patient permission to message them."""
+    provider = models.ForeignKey(Provider, on_delete=models.CASCADE, related_name='message_access_grants')
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='message_access_grants')
+    granted_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('provider', 'patient')
+
+    def __str__(self):
+        return f"{self.patient} can message {self.provider}"
+
+class Message(models.Model):
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
+    recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_messages')
+    body = models.TextField()
+    sent_at = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"From {self.sender} to {self.recipient} at {self.sent_at}"

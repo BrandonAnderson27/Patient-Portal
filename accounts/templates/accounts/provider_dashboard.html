@@ -281,9 +281,10 @@
         Write Prescription
       </button>
       <div class="nav-section">Communication</div>
-      <button class="nav-item" onclick="showTab('inbox', this)">
+      <button class="nav-item" onclick="showTab('messages', this)">
         <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        Message Inbox
+        Messages
+        {% if unread_count %}<span class="nav-badge">{{ unread_count }}</span>{% endif %}
       </button>
     </nav>
 
@@ -558,23 +559,80 @@
       </div>
 
       <!-- ══════════════════════════════════ -->
-      <!-- INBOX                              -->
+      <!-- MESSAGES                           -->
       <!-- ══════════════════════════════════ -->
-      <div class="tab-panel" id="tab-inbox">
-        <div class="section-head"><h3>Message Inbox</h3></div>
+      <div class="tab-panel" id="tab-messages">
+        <div class="section-head"><h3>Messages</h3></div>
         <div class="two-col">
+
+          <!-- Inbox -->
           <div class="panel-card">
-            <h4>Inbox</h4>
-            <p style="font-size:13px;color:var(--muted);padding:10px 0;">No messages yet.</p>
+            <h4>Inbox ({{ messages_inbox|length }})</h4>
+            {% if messages_inbox %}
+              {% for msg in messages_inbox %}
+              <div class="msg-item">
+                <div class="msg-dot {% if msg.is_read %}read{% endif %}"></div>
+                <div style="flex:1;">
+                  <div class="msg-subject">{{ msg.sender.get_full_name }}</div>
+                  <div class="msg-date">{{ msg.body }}</div>
+                  <div class="msg-date">{{ msg.sent_at|date:"M j, Y g:i A" }}</div>
+                  {% if not msg.is_read %}
+                  <a href="{% url 'mark_message_read' msg.id %}" style="font-size:12px; color:var(--accent);">Mark as read</a>
+                  {% endif %}
+                </div>
+              </div>
+              {% endfor %}
+            {% else %}
+              <p style="font-size:13px;color:var(--muted);padding:10px 0">No messages yet.</p>
+            {% endif %}
           </div>
-          <div class="panel-card">
-            <h4>Compose Message</h4>
-            <div class="compose-area">
-              <input type="text" name="recipient" placeholder="To: Patient / Care Team" class="compose-input"/>
-              <input type="text" name="subject" placeholder="Subject" class="compose-input"/>
-              <textarea name="body" placeholder="Write your message here..." class="compose-input compose-textarea"></textarea>
-              <button type="button" class="btn-send">Send Message</button>
+
+          <!-- Right column: Compose + Access Management -->
+          <div style="display:flex; flex-direction:column; gap:16px;">
+
+            <!-- Compose -->
+            <div class="panel-card">
+              <h4>Send a Message</h4>
+              {% if granted_patient_ids %}
+                <form method="POST" action="{% url 'send_message_provider' %}" class="compose-area">
+                  {% csrf_token %}
+                  <select name="patient_id" class="compose-input">
+                    <option value="">-- Select Patient --</option>
+                    {% for patient in patients %}
+                      {% if patient.id in granted_patient_ids %}
+                        <option value="{{ patient.id }}">{{ patient.user.get_full_name }}</option>
+                      {% endif %}
+                    {% endfor %}
+                  </select>
+                  <textarea name="body" placeholder="Write your message here..." class="compose-input compose-textarea"></textarea>
+                  <button type="submit" class="btn-send">Send Message</button>
+                </form>
+              {% else %}
+                <p style="font-size:13px;color:var(--muted);padding:10px 0">
+                  Grant messaging access to a patient below before sending them a message.
+                </p>
+              {% endif %}
             </div>
+
+            <!-- Grant/Revoke Access -->
+            <div class="panel-card">
+              <h4>Patient Message Access</h4>
+              {% if patients %}
+                {% for patient in patients %}
+                <div class="report-item">
+                  <span class="report-name">{{ patient.user.get_full_name }}</span>
+                  {% if patient.id in granted_patient_ids %}
+                    <a href="{% url 'revoke_message_access' patient.id %}" class="report-link" style="color:var(--error);">Revoke</a>
+                  {% else %}
+                    <a href="{% url 'grant_message_access' patient.id %}" class="report-link">Grant Access</a>
+                  {% endif %}
+                </div>
+                {% endfor %}
+              {% else %}
+                <p style="font-size:13px;color:var(--muted);padding:10px 0">No patients yet.</p>
+              {% endif %}
+            </div>
+
           </div>
         </div>
       </div>

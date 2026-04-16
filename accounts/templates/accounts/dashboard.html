@@ -666,23 +666,51 @@
       <div class="tab-panel" id="tab-inbox">
         <div class="section-head"><h3>Message Inbox</h3></div>
         <div class="two-col">
+
+          <!-- Inbox -->
           <div class="panel-card">
-            <h4>Inbox ({{ messages_inbox|length|default:0 }}) <button class="btn-delete-msg" onclick="confirmDelete()">Delete</button></h4>
-            {% if messages_inbox %}{% for msg in messages_inbox %}
-            <div class="msg-item"><div class="msg-dot {% if msg.read %}read{% endif %}"></div><div><div class="msg-subject">{{ msg.subject }}</div><div class="msg-date">{{ msg.date }}</div></div></div>
-            {% endfor %}{% else %}
-            <p style="font-size:13px;color:var(--muted);padding:10px 0">No messages yet.</p>{% endif %}
+            <h4>Inbox ({{ messages_inbox|length }})</h4>
+            {% if messages_inbox %}
+              {% for msg in messages_inbox %}
+              <div class="msg-item">
+                <div class="msg-dot {% if msg.is_read %}read{% endif %}"></div>
+                <div style="flex:1;">
+                  <div class="msg-subject">{{ msg.sender.get_full_name }}</div>
+                  <div class="msg-date">{{ msg.body }}</div>
+                  <div class="msg-date">{{ msg.sent_at|date:"M j, Y g:i A" }}</div>
+                  {% if not msg.is_read %}
+                  <a href="{% url 'mark_message_read' msg.id %}" style="font-size:12px;color:var(--accent);">Mark as read</a>
+                  {% endif %}
+                </div>
+              </div>
+              {% endfor %}
+            {% else %}
+              <p style="font-size:13px;color:var(--muted);padding:10px 0">No messages yet.</p>
+            {% endif %}
           </div>
+
+          <!-- Compose -->
           <div class="panel-card">
-            <h4>Compose Message</h4>
-            <form method="POST" action="#" class="compose-area">
-              {% csrf_token %}
-              <input type="text" name="recipient" placeholder="To: Receptionist / Care Team" class="compose-input"/>
-              <input type="text" name="subject" placeholder="Subject" class="compose-input"/>
-              <textarea name="body" placeholder="Write your message here..." class="compose-input compose-textarea"></textarea>
-              <button type="submit" class="btn-send">Send Message</button>
-            </form>
+            <h4>Send a Message</h4>
+            {% if accessible_providers %}
+              <form method="POST" action="{% url 'send_message' %}" class="compose-area">
+                {% csrf_token %}
+                <select name="provider_id" class="compose-input">
+                  <option value="">-- Select Provider --</option>
+                  {% for provider in accessible_providers %}
+                    <option value="{{ provider.id }}">Dr. {{ provider.user.get_full_name }}</option>
+                  {% endfor %}
+                </select>
+                <textarea name="body" placeholder="Write your message here..." class="compose-input compose-textarea"></textarea>
+                <button type="submit" class="btn-send">Send Message</button>
+              </form>
+            {% else %}
+              <p style="font-size:13px;color:var(--muted);padding:10px 0">
+                You have not been granted messaging access by any provider yet.
+              </p>
+            {% endif %}
           </div>
+
         </div>
       </div>
 
