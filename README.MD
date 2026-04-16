@@ -163,11 +163,13 @@ http://127.0.0.1:8000/
 
 ## Project Structure
 
+```
 Patient-Portal/
 ├── accounts/          # User auth, roles, dashboards, messaging
 ├── labs/              # Lab requests and results
 ├── manage.py
 └── requirements.txt
+```
 
 ---
 
