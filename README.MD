@@ -17,6 +17,17 @@ Required:
 
 ---
 
+## Installation
+
+Clone the repository:
+
+```
+git clone https://github.com/your-username/patient-portal.git
+cd patient-portal
+```
+
+---
+
 ## Database Setup
 
 This project uses PostgreSQL. Before running migrations, create a local PostgreSQL database and update the `DATABASES` setting in `settings.py` with your credentials:
