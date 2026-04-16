@@ -22,7 +22,7 @@ Required:
 Clone the repository:
 
 ```
-git clone https://github.com/your-username/patient-portal.git
+git clone https://github.com/BrandonAnderson27/patient-portal.git
 cd patient-portal
 ```
 
