@@ -1,3 +1,5 @@
+import json
+import random
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import AuthenticationForm
@@ -7,6 +9,7 @@ from django.http import JsonResponse
 from accounts.models import Appointment, Bill, SuccessStory, User, Patient, AccountApprovalRequest, Provider, ProviderAvailability, Receptionist, Prescription, Message, MessageAccess
 from labs.models import Lab, LabRequest, LabResult
 from accounts.decorators import role_required
+from django.views.decorators.http import require_POST
 import datetime
 
 def login_view(request):
@@ -496,3 +499,60 @@ def mark_bill_paid(request, bill_id):
     messages.success(request, 'Bill marked as paid.')
     next_url = request.META.get('HTTP_REFERER') or 'dashboard'
     return redirect(next_url)
+
+@require_POST
+def fp_send_code(request):
+    data = json.loads(request.body)
+    username = data.get('username', '').strip()
+
+    # We always respond OK to avoid exposing whether a username exists
+    # But only store session data if the user actually exists
+    try:
+        User.objects.get(username=username)
+        code = str(random.randint(100000, 999999))
+        request.session['fp_code'] = code
+        request.session['fp_username'] = username
+    except User.DoesNotExist:
+        # Still generate a fake code so the response looks identical
+        code = str(random.randint(100000, 999999))
+
+    # ⚠️ In production: email/SMS the code instead of returning it here
+    return JsonResponse({'ok': True, 'code': code})
+
+
+@require_POST
+def fp_verify_code(request):
+    data = json.loads(request.body)
+    entered = data.get('code', '').strip()
+
+    stored = request.session.get('fp_code')
+    if not stored or entered != stored:
+        return JsonResponse({'ok': False, 'error': 'Incorrect code. Please try again.'}, status=400)
+
+    return JsonResponse({'ok': True})
+
+
+@require_POST
+def fp_reset_password(request):
+    data = json.loads(request.body)
+    new_password = data.get('password', '').strip()
+
+    username = request.session.get('fp_username')
+    code = request.session.get('fp_code')
+
+    if not username or not code:
+        return JsonResponse({'ok': False, 'error': 'Session expired. Please start over.'}, status=400)
+
+    if len(new_password) < 6:
+        return JsonResponse({'ok': False, 'error': 'Password must be at least 6 characters.'}, status=400)
+
+    try:
+        user = User.objects.get(username=username)
+        user.set_password(new_password)  # Uses Django's hasher, same as your register_view
+        user.save()
+        # Clean up session
+        request.session.pop('fp_code', None)
+        request.session.pop('fp_username', None)
+        return JsonResponse({'ok': True})
+    except User.DoesNotExist:
+        return JsonResponse({'ok': False, 'error': 'User not found.'}, status=404)

@@ -1,68 +1,3 @@
-<!-- <!DOCTYPE html>
-<html>
-<head>
-    <title>Register - Patient Portal</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f0f4f8;
-        }
-        h1 { color: #2c3e50; }
-        form {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            width: 300px;
-        }
-        input {
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 1rem;
-        }
-        button {
-            background-color: #2ecc71;
-            color: white;
-            padding: 12px;
-            border: none;
-            border-radius: 5px;
-            font-size: 1rem;
-            cursor: pointer;
-        }
-        button:hover { background-color: #27ae60; }
-        .error { color: red; }
-        .success { color: green; }
-    </style>
-</head>
-<body>
-    <h1>Create Patient Account</h1>
-    {% if messages %}
-        {% for message in messages %}
-            <p class="{{ message.tags }}">{{ message }}</p>
-        {% endfor %}
-    {% endif %}
-    <form method="POST">
-        {% csrf_token %}
-        <input type="text" name="username" placeholder="Username" required>
-        <input type="password" name="password" placeholder="Password" required>
-        <input type="text" name="first_name" placeholder="First Name" required>
-        <input type="text" name="last_name" placeholder="Last Name" required>
-        <input type="email" name="email" placeholder="Email" required>
-        <input type="text" name="phone_number" placeholder="Phone Number">
-        <input type="date" name="date_of_birth" placeholder="Date of Birth">
-        <button type="submit">Register</button>
-    </form>
-    <p>Already have an account? <a href="{% url 'login' %}">Login here</a></p>
-</body>
-</html> -->
-
-{% load static %}
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
@@ -87,18 +22,16 @@
       --text: #e8f0ea; --muted: #7a9982; --border: #2a3d30; --border2: #344d3a;
     }
     html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); transition: background .3s, color .3s; }
-
+ 
     /* Loader */
     .page-loader { position: fixed; inset: 0; background: var(--panel); display: flex; align-items: center; justify-content: center; z-index: 9999; transition: opacity .5s, visibility .5s; }
     .page-loader.done { opacity: 0; visibility: hidden; }
     .loader-mark { width: 44px; height: 44px; border-radius: 11px; background: var(--accent2); display: flex; align-items: center; justify-content: center; animation: pulse 1s ease-in-out infinite; }
     @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
-
-    /* Toast */
-
+ 
     /* Layout */
     .page { min-height: 100vh; display: grid; grid-template-columns: 380px 1fr; }
-
+ 
     /* Left */
     .left { background: var(--panel); padding: 52px 40px; display: flex; flex-direction: column; justify-content: space-between; position: sticky; top: 0; height: 100vh; overflow: hidden; }
     .left::before { content: ''; position: absolute; width: 460px; height: 460px; border-radius: 50%; background: radial-gradient(circle, rgba(82,183,136,0.13) 0%, transparent 65%); top: -120px; left: -100px; pointer-events: none; }
@@ -115,7 +48,7 @@
     .step-text p { font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.8); }
     .step-text span { font-size: 11.5px; color: rgba(255,255,255,0.38); }
     .left-foot { font-size: 11px; color: rgba(255,255,255,0.25); position: relative; z-index: 1; }
-
+ 
     /* Right */
     .right { display: flex; justify-content: center; padding: 52px 40px; position: relative; }
     .theme-btn { position: absolute; top: 20px; right: 20px; width: 36px; height: 36px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--surface); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .16s; }
@@ -123,20 +56,15 @@
     .theme-btn svg { width: 17px; height: 17px; stroke: var(--muted); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
     .card { width: 100%; max-width: 500px; animation: slideIn .5s ease both; }
     @keyframes slideIn { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
-
-    /* Tabs */
-    .tabs { display: flex; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 4px; margin-bottom: 30px; box-shadow: var(--shadow); }
-    .tab { flex: 1; padding: 10px; border: none; background: none; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 13.5px; font-weight: 500; color: var(--muted); cursor: pointer; transition: all .2s; }
-    .tab.active { background: var(--panel); color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
-
+ 
     /* Head */
     .head { margin-bottom: 24px; }
     .head h2 { font-family: 'Lora', serif; font-size: 26px; font-weight: 600; color: var(--text); margin-bottom: 5px; }
     .head p { font-size: 14px; color: var(--muted); }
-
+ 
     /* Section title */
     .section-title { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin: 24px 0 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
-
+ 
     /* Floating label fields */
     .field { margin-bottom: 16px; }
     .field-wrap { position: relative; }
@@ -153,10 +81,10 @@
     .field.has-error input, .field.has-error select { border-color: var(--error); }
     .field-error { font-size: 12px; color: var(--error); margin-top: 5px; display: none; }
     .field.has-error .field-error { display: block; }
-
+ 
     /* Grid */
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-
+ 
     /* Password strength */
     .pw-strength { margin-top: 8px; }
     .pw-bar { height: 4px; border-radius: 2px; background: var(--border); overflow: hidden; margin-bottom: 5px; }
@@ -173,11 +101,7 @@
     .pw-rules { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
     .pw-rule { font-size: 11px; padding: 3px 8px; border-radius: 4px; background: var(--bg); border: 1px solid var(--border); color: var(--muted); transition: all .2s; }
     .pw-rule.met { background: var(--accent-pale); border-color: var(--border2); color: var(--accent); }
-
-    /* Staff section */
-    .staff-section { display: none; }
-    .staff-section.show { display: block; }
-
+ 
     /* Messages */
     .msgs { margin-bottom: 18px; }
     .msg { padding: 11px 14px; border-radius: 9px; font-size: 13px; margin-bottom: 7px; }
@@ -185,7 +109,7 @@
     .msg.success { background: var(--success-bg); color: var(--success); border: 1px solid var(--success-border); }
     .errorlist { list-style: none; margin-top: 4px; }
     .errorlist li { font-size: 12px; color: var(--error); }
-
+ 
     /* Submit */
     .btn { width: 100%; padding: 14px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; transition: all .2s; margin-top: 8px; position: relative; }
     .btn:hover { background: var(--panel2); transform: translateY(-1px); box-shadow: var(--shadow2); }
@@ -193,13 +117,13 @@
     .btn.loading span { display: none; }
     .btn.loading .spinner { display: block; }
     @keyframes spin { to{transform:rotate(360deg)} }
-
+ 
     .sep { display: flex; align-items: center; gap: 12px; margin: 22px 0; color: var(--muted); font-size: 13px; }
     .sep::before, .sep::after { content: ''; flex: 1; height: 1px; background: var(--border); }
     .alt { text-align: center; font-size: 14px; color: var(--muted); margin-bottom: 40px; }
     .alt a { color: var(--accent); font-weight: 600; text-decoration: none; }
     .alt a:hover { text-decoration: underline; }
-
+ 
     @media (max-width: 780px) {
       .page { grid-template-columns: 1fr; }
       .left { display: none; }
@@ -214,7 +138,7 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
   </div>
 </div>
-
+ 
 <div class="page">
   <!-- LEFT -->
   <aside class="left">
@@ -234,37 +158,32 @@
     </div>
     <div class="left-foot">© 2026 Patient Portal · CS 310 Group 4</div>
   </aside>
-
+ 
   <!-- RIGHT -->
   <main class="right">
     <button class="theme-btn" onclick="toggleTheme()">
       <svg id="theme-icon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
     </button>
     <div class="card">
-      <div class="tabs">
-        <button class="tab active" id="tab-patient" onclick="switchType('patient')">New Patient</button>
-        <button class="tab" id="tab-staff" onclick="switchType('staff')">New Staff Member</button>
-      </div>
-
+ 
       <div class="head">
-        <h2 id="form-title">Create your account</h2>
-        <p id="form-sub">Fill in your details to register as a new patient.</p>
+        <h2>Create your account</h2>
+        <p>Fill in your details to register as a new patient.</p>
       </div>
-
+ 
       <form method="POST" action="{% url 'register' %}" onsubmit="handleSubmit(this)">
         {% csrf_token %}
-        <input type="hidden" name="account_type" id="account_type" value="patient"/>
-
+        <input type="hidden" name="account_type" value="patient"/>
+ 
         <div class="section-title">Account Credentials</div>
-
+ 
         <div class="field" id="field-username">
           <div class="field-wrap">
             <input type="text" id="id_username" name="username" placeholder="Username" required/>
             <label for="id_username">Username *</label>
           </div>
-          
         </div>
-
+ 
         <div class="grid-2">
           <div class="field">
             <div class="field-wrap">
@@ -279,22 +198,20 @@
             </div>
           </div>
         </div>
-
+ 
         <div class="field">
           <div class="field-wrap">
             <input type="email" id="id_email" name="email" placeholder="Email" required/>
             <label for="id_email">Email Address *</label>
           </div>
-          
         </div>
-
+ 
         <div class="grid-2">
           <div class="field">
             <div class="field-wrap">
               <input type="password" id="id_password1" name="password1" placeholder="Password" required oninput="checkStrength(this.value)"/>
               <label for="id_password1">Password *</label>
             </div>
-            
             <div class="pw-strength">
               <div class="pw-bar"><div class="pw-fill" id="pw-fill"></div></div>
               <div class="pw-label" id="pw-label">Enter a password</div>
@@ -311,57 +228,31 @@
               <input type="password" id="id_password2" name="password2" placeholder="Confirm Password" required oninput="checkMatch()"/>
               <label for="id_password2">Confirm Password *</label>
             </div>
-            
             <div id="match-msg" style="font-size:12px;margin-top:5px;"></div>
           </div>
         </div>
-
-        <!-- Staff section -->
-        <div class="staff-section" id="staff-section">
-          <div class="section-title">Staff Information</div>
-          <div class="field">
-            <div class="field-wrap">
-              <select id="id_position" name="position">
-                <option value="" disabled selected></option>
-                <option value="doctor">Doctor</option>
-                <option value="nurse">Nurse</option>
-                <option value="receptionist">Receptionist</option>
-                <option value="billing_staff">Billing Staff</option>
-                <option value="lab_staff">Lab Staff</option>
-                <option value="admin">System Administrator</option>
-              </select>
-              <label for="id_position">Position / Role *</label>
-            </div>
-          </div>
-          <div class="field">
-            <div class="field-wrap">
-              <input type="text" id="id_employee_id" name="employee_id" placeholder="Employee ID"/>
-              <label for="id_employee_id">Employee ID</label>
-            </div>
-          </div>
-        </div>
-
+ 
         <button type="submit" class="btn" id="submit-btn">
           <span id="btn-text">Create Patient Account</span>
           <div class="spinner"></div>
         </button>
       </form>
-
+ 
       <div class="sep">or</div>
       <div class="alt">Already have an account? <a href="{% url 'login' %}">Sign in</a></div>
     </div>
   </main>
 </div>
-
+ 
 <script>
   window.addEventListener('load', () => setTimeout(() => document.getElementById('loader').classList.add('done'), 500));
-
+ 
   const saved = localStorage.getItem('theme');
   if (saved) {
     document.documentElement.setAttribute('data-theme', saved);
     if (saved === 'light') document.getElementById('theme-icon').innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
   }
-
+ 
   function toggleTheme() {
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
     document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
@@ -370,17 +261,7 @@
       ? '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>'
       : '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
   }
-
-  function switchType(type) {
-    document.getElementById('tab-patient').classList.toggle('active', type === 'patient');
-    document.getElementById('tab-staff').classList.toggle('active', type === 'staff');
-    document.getElementById('staff-section').classList.toggle('show', type === 'staff');
-    document.getElementById('account_type').value = type;
-    document.getElementById('form-title').textContent = type === 'patient' ? 'Create your account' : 'Staff Registration';
-    document.getElementById('form-sub').textContent = type === 'patient' ? 'Fill in your details to register as a new patient.' : 'Register as a new staff member. Admin approval required.';
-    document.getElementById('btn-text').textContent = type === 'patient' ? 'Create Patient Account' : 'Create Staff Account';
-  }
-
+ 
   function checkStrength(val) {
     const fill = document.getElementById('pw-fill');
     const label = document.getElementById('pw-label');
@@ -399,7 +280,7 @@
     label.className = 'pw-label ' + (val ? levels[score] : '');
     label.textContent = val ? labels[score] : 'Enter a password';
   }
-
+ 
   function checkMatch() {
     const p1 = document.getElementById('id_password1').value;
     const p2 = document.getElementById('id_password2').value;
@@ -408,11 +289,11 @@
     msg.textContent = p1 === p2 ? '✓ Passwords match' : '✗ Passwords do not match';
     msg.style.color = p1 === p2 ? 'var(--accent)' : 'var(--error)';
   }
-
+ 
   function handleSubmit(form) {
     document.getElementById('submit-btn').classList.add('loading');
     return true;
-}
+  }
 </script>
 </body>
 </html>

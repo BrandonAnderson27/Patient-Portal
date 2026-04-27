@@ -24,4 +24,8 @@ urlpatterns = [
     path('messages/send-provider/', views.send_message_provider, name='send_message_provider'),
     path('update-profile/', views.update_profile, name='update_profile'),
     path('bills/<int:bill_id>/pay/', views.mark_bill_paid, name='mark_bill_paid'),
+    path('forgot-password/send-code/', views.fp_send_code, name='fp_send_code'),
+    path('forgot-password/verify-code/', views.fp_verify_code, name='fp_verify_code'),
+    path('forgot-password/reset/', views.fp_reset_password, name='fp_reset_password'),
+
 ]
