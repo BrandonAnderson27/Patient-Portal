@@ -189,6 +189,14 @@ def approve_appointment(request, appointment_id):
     appointment = Appointment.objects.get(id=appointment_id)
     appointment.status = 'scheduled'
     appointment.save()
+    
+    Bill.objects.create(
+        patient=appointment.patient,
+        description=f"Office Visit — Dr. {appointment.provider.user.last_name} on {appointment.date}",
+        amount=100.00,
+        status='unpaid'
+    )    
+    
     messages.success(request, 'Appointment approved.')
     if request.user.role == 'receptionist':
         return redirect('receptionist_dashboard')
@@ -301,6 +309,14 @@ def add_prescription(request):
             refills_remaining=int(request.POST.get('refills_allowed', 0)),
             status='active',
         )
+        
+        Bill.objects.create(
+            patient=patient,
+            description=f"Prescription — {Prescription.medication_name} ({Prescription.dosage})",
+            amount=25.00,
+            status='unpaid'
+        )
+
         messages.success(request, 'Prescription saved successfully.')
         return redirect('provider_dashboard')
     return redirect('provider_dashboard')
