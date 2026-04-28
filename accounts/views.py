@@ -293,7 +293,7 @@ def add_prescription(request):
         appointment = Appointment.objects.get(id=appointment_id) if appointment_id else None
 
         import datetime
-        Prescription.objects.create(
+        prescription = Prescription.objects.create(
             patient=patient,
             provider=provider,
             appointment=appointment,
@@ -312,7 +312,7 @@ def add_prescription(request):
         
         Bill.objects.create(
             patient=patient,
-            description=f"Prescription — {Prescription.medication_name} ({Prescription.dosage})",
+            description=f"Prescription — {prescription.medication_name} ({prescription.dosage}) — Dr. {provider.user.last_name}",
             amount=25.00,
             status='unpaid'
         )

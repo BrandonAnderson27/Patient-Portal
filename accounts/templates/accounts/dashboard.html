@@ -434,8 +434,6 @@
               <div class="field"><div class="field-wrap"><input type="tel" name="contact_number" placeholder="Contact" value="{{ patient.contact_number|default:'' }}"/><label>Contact Number</label></div></div>
               <div class="field"><div class="field-wrap"><input type="tel" name="emergency_contact" placeholder="Emergency" value="{{ patient.emergency_contact|default:'' }}"/><label>Emergency Contact</label></div></div>
               <div class="field span-2"><div class="field-wrap"><input type="text" name="address" placeholder="Address" value="{{ patient.address|default:'' }}"/><label>Address</label></div></div>
-              <div class="field"><div class="field-wrap"><input type="password" name="new_password" placeholder="New password"/><label>New Password</label></div></div>
-              <div class="field"><div class="field-wrap"><input type="password" name="confirm_password" placeholder="Confirm"/><label>Confirm Password</label></div></div>
             </div>
             <div class="form-actions"><button type="submit" class="btn-save">Save Changes</button><button type="button" class="btn-cancel" onclick="showTab('view-profile', null)">Cancel</button></div>
           </form>
@@ -597,7 +595,7 @@
       <!-- Prescriptions                      -->
       <!-- ══════════════════════════════════ -->
       <div class="tab-panel" id="tab-reports">
-        <div class="section-head"><h3>Prescriptions</h3><button class="btn-save" onclick="window.print()" style="padding:8px 18px;font-size:13px;">Print</button></div>
+        <div class="section-head"><h3>Prescriptions</h3></div>
 
         <div class="panel-card">
           <h4>Active Prescriptions</h4>
@@ -638,7 +636,6 @@
       <div class="tab-panel" id="tab-billing">
         <div class="section-head">
           <h3>Billing</h3>
-          <button class="btn-save" onclick="window.print()" style="padding:8px 18px;font-size:13px;">Print Bills</button>
         </div>
         <div class="two-col">
 

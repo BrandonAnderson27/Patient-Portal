@@ -235,27 +235,21 @@ class Command(BaseCommand):
         self.stdout.write('Creating test bills...')
         Bill.objects.create(
             patient=patient,
-            description='Office Visit - Dr. Smith',
-            amount=150.00,
-            status='paid',
-            paid_at=datetime.date.today() - datetime.timedelta(days=28)
-        )
-        Bill.objects.create(
-            patient=patient,
-            description='Lab Work - Complete Blood Count',
-            amount=75.50,
-            status='paid',
-            paid_at=datetime.date.today() - datetime.timedelta(days=28)
-        )
-        Bill.objects.create(
-            patient=patient,
-            description='Follow-up Visit - Dr. Smith',
+            description=f"Office Visit — Dr. {provider.user.last_name} on {past_appointment.date}",
             amount=100.00,
-            status='unpaid'
+            status='paid',
+            paid_at=datetime.date.today() - datetime.timedelta(days=28)
         )
         Bill.objects.create(
             patient=patient,
-            description='Prescription - Amoxicillin',
+            description=f"Prescription — Amoxicillin (500mg) — Dr. {provider.user.last_name}",
+            amount=25.00,
+            status='paid',
+            paid_at=datetime.date.today() - datetime.timedelta(days=28)
+        )
+        Bill.objects.create(
+            patient=patient,
+            description=f"Prescription — Lisinopril (10mg) — Dr. {provider.user.last_name}",
             amount=25.00,
             status='unpaid'
         )
